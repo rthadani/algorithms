@@ -29,37 +29,35 @@
   [maze x y value]
   (assoc-in maze [x y] value))
 
-(def solved-maze (atom []))
-
 (defn solve-maze*
-  [maze [x y]]
+  [maze [x y] solution]
   (when (nil? maze) nil)
   (if (= :E (or (element-at maze (inc x) y)
                 (element-at maze x (inc y))))
-    (swap! solved-maze assoc-in [0] maze)
+    (swap! solution assoc-in [0] maze)
     (do
       (when (space-available? maze x (inc y))
         (-> (update-position maze x (inc y) :x)
-            (solve-maze* [x (inc y)])))
+            (solve-maze* [x (inc y)] solution)))
       (when (space-available? maze (inc x) y)
         (-> (update-position maze (inc x) y :x)
-            (solve-maze* [(inc x) y]))))))
-
+            (solve-maze* [(inc x) y] solution))))))
 
 (defn solve-maze [maze]
-  (solve-maze* maze (start maze))
-  (first @solved-maze))
+  (let [solution (atom [])]
+    (solve-maze* maze (start maze) solution)
+    (first @solution)))
 
 (defn print-maze
   [maze]
   (doall (map #(println %) maze)))
 
 (print-maze (solve-maze [[:S 0 1]
-                                    [1 0 1]
-                                    [1 0 :E]]))
+                         [1 0 1]
+                         [1 0 :E]]))
 (println)
 (print-maze (solve-maze [[:S 0 0 1]
-                                    [1 1 0 0]
-                                    [1 0 0 1]
-                                    [1 1 0 :E]]))
+                         [1 1 0 0]
+                         [1 0 0 1]
+                         [1 1 0 :E]]))
 
