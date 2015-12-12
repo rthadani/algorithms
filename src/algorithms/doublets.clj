@@ -1,8 +1,9 @@
-(ns algorithms.doublets)
+(ns algorithms.doublets
+  (:require [clojure.data :as data]))
 
 (defn word-seperated-by-a-letter?
   [source target]
-  (let [[first second _] (clojure.data/diff (seq source) (seq target))]
+  (let [[first second _] (data/diff (seq source) (seq target))]
     (= 1 (count (filter some? first)) (count (filter some? second)))))
 
 (defn prepare-dictionary
@@ -13,7 +14,7 @@
          [source target])
        (group-by first)
        (reduce (fn [acc [key vals]]
-                 (->> (mapcat identity vals)
+                 (->> (apply concat vals)
                       (filter #(not (= key %)))
                       distinct
                       (assoc acc key)))
@@ -38,12 +39,11 @@
 
 (defn find-path
   [tree dest solution]
-  #_(println tree  "--" solution)
   (cond
     (= dest (first tree)) (conj solution (first tree))
     (empty? tree) nil
     :else
-      (let [children (filter #(not (seq? %)) (fnext tree))
+      (let [children (fnext tree)
             solution (conj solution (first tree))
             solve-for-child (find-path (first children) dest solution)]
         (if-not solve-for-child

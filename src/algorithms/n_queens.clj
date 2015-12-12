@@ -38,4 +38,5 @@
       (print ". "))
     (when (= y (count board))
       (println "")))
-  (println))
+ (println))
+
