@@ -46,9 +46,9 @@
 
 (defn game-of-life
   [initial-state state-channel]
-  (go-loop []
-    (>!! state-channel  initial-state)
-    (recur)))
+  (go-loop [state initial-state]
+    (>!! state-channel state)
+    (recur (tick state))))
 
 (def glider #{[0 1] [1 2] [2 0] [2 1] [2 2]})
 (def gosper-glider-gun #{[1 5] [2 5] [1 6] [2 6]
