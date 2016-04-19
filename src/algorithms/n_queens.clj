@@ -40,3 +40,4 @@
       (println "")))
  (println))
 
+(print-board (place-queens 4))

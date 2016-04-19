@@ -5,4 +5,4 @@
         (lazy-seq (sieve (filter #(not= 0 (mod % (first s)))
                                  (rest s))))))
 
-(take 100 (sieve (iterate inc 2)))
+(take 1000 (sieve (iterate inc 2)))

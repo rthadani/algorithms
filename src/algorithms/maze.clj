@@ -18,7 +18,7 @@
 (defn element-at
   [maze x y]
   (when (and maze (< x (count maze)) (< y (count (get maze x)))))
-    (get-in maze [x y]))
+  (get-in maze [x y]))
 
 (defn space-available?
   [maze x y]

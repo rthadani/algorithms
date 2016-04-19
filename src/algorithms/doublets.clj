@@ -12,10 +12,11 @@
              target dictionary
              :when (word-seperated-by-a-letter? source target)]
          [source target])
+
        (group-by first)
        (reduce (fn [acc [key vals]]
                  (->> (apply concat vals)
-                      (filter #(not (= key %)))
+                      (filter #(not= key %))
                       distinct
                       (assoc acc key)))
                {})))

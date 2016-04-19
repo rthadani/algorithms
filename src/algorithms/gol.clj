@@ -1,40 +1,58 @@
 (ns algorithms.gol
-  (require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [clojure.core.async :refer [go-loop >!!]]
+            [clojure.set :as set]))
 
-(defn is-alive?
-  [grid x y]
-  (if (or (< x 0)
-          (< y 0)
-          (> y (count grid))
-          (> x (count (grid 0))))
-    false)
-    (get-in grid x y))
+(def neighbor-offsets
+  (for [x (range -1 2)
+        y (range -1 2)
+        :let [offset [x y]]
+        :when (not= offset [0 0])]
+    offset))
 
-(defn get-live-neighbours
-  [grid x y]
-  (apply sum (for [x-offset [-1 0 1]
-                   y-offset [-1 0 1]
-                   :when (not-every? zero? [x-offset y-offset])]
-               (if (is-alive? grid
-                              (+ x x-offset)
-                              (+ y y-offset))
-                 1
-                 0))))
+(defn neighbors
+  [cell]
+  (into #{} (map #(mapv + % cell) neighbor-offsets)))
 
-(defn get-cell-state
-  [grid x y]
-  (let [is-cell-alive (is-alive? grid x y)
-        live-neighbours (get-live-neighbours grid x y)]
-       (match [is-cell-alive live-neighbours]
-              [true  (_ :guard #(< % 2))]              false
-              [true  (_ :guard #(or (= 2 %) (= 3 %)))] true
-              [true  (_ :guard #(> % 3))]              false
-              [false (_ :guard #(= % 3))]              true)))
+(defn live-neighbors
+  [cell current-state]
+  (->> (neighbors cell)
+       (set/intersection current-state)))
 
-(defn get-next-step
-  [grid]
-  (map (fn [y]
-         (map (fn [x]
-                (get-cell-state grid x y))
-              (range 0 (count (grid 0)))))
-       (range 0 (count grid))))
+(defn dead-neighbors
+  [cell current-state]
+  (->> (neighbors cell)
+       (filter #(not (contains? current-state %)))))
+
+(defn survivors
+  [current-state]
+  (into #{}
+        (for [cell current-state
+              :let [alive (count (live-neighbors cell current-state))]
+              :when (or (= alive 2) (= alive 3))]
+          cell)))
+
+(defn offspring
+  [current-state]
+  (into #{}
+        (for [cell current-state
+              child (dead-neighbors cell current-state)
+              :when (= 3 (count (live-neighbors child current-state)))]
+          child)))
+
+(defn tick
+  [current-state]
+  (set/union (survivors current-state) (offspring current-state)))
+
+(defn game-of-life
+  [initial-state state-channel]
+  (go-loop []
+    (>!! state-channel  initial-state)
+    (recur)))
+
+(def glider #{[0 1] [1 2] [2 0] [2 1] [2 2]})
+(def gosper-glider-gun #{[1 5] [2 5] [1 6] [2 6]
+                         [11 5] [11 6] [11 7] [12 4] [12 8] [13 3] [13 9] [14 3] [14 9]
+                         [15 6] [16 4] [16 8] [17 5] [17 6] [17 7] [18 6]
+                         [21 3] [21 4] [21 5] [22 3] [22 4] [22 5] [23 2] [23 6] [25 1] [25 2] [25 6] [25 7]
+                         [35 3] [35 4] [36 3] [36 4]})
