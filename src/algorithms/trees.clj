@@ -1,5 +1,6 @@
 (ns algorithms.trees
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]])
+  (:import (java.security MessageDigest)))
 
 ;;common tree functions
 (defn- leaf?
@@ -130,4 +131,20 @@
        (conj-rb-tree 6)
        (conj-rb-tree 7)
        (conj-rb-tree 8)))
+
+;Merkle
+(defn md5hash
+  [val]
+  (->>
+    (doto
+      (MessageDigest/getInstance "MD5")
+      (.update (.getBytes (String. val))))
+    .digest
+    (map #(format "%02x" %))
+    (apply str)))
+
+(defn merkle-tree
+  [values]
+  (->> (partition-all 2)))
+
 

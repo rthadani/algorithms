@@ -1,6 +1,6 @@
 (ns algorithms.sorts
   (:require [clojure.core.match :refer [match]]
-           [algorithms.heaps :refer :all]))
+            [algorithms.heaps :refer :all]))
 
 (defn quick-sort
   [array]
@@ -11,20 +11,20 @@
       [(first array)]
       (quick-sort (filter #(> % (first array)) (rest array))))))
 
-(defn- insert
+(defn- insert-in-sorted-array
   [element result]
   (cond
     (empty? result) [element]
     (< element (first result)) (cons element result)
-    :else (cons (first result) (insert element (rest result)))))
+    :else (cons (first result) (insert-in-sorted-array element (rest result)))))
 
 (defn insertion-sort
   [array]
-  (loop [acc      []
-         elements array]
-    (if (empty? elements)
-      acc
-      (recur (insert (first elements) acc) (rest elements)))))
+  (if (empty? array)
+    array
+    (let [element (first array)
+          sorted (insertion-sort (rest array))]
+      (insert-in-sorted-array element sorted))))
 
 (defn heap-sort
   [array]
@@ -48,7 +48,7 @@
 
 (defn merge-sort*
   [array l r]
-  (if  (>= l r)
+  (if (>= l r)
     [(array l)]
     (let [mid (int (Math/floor (/ (+ l r) 2)))]
       (merge-arrays (merge-sort* array l mid) (merge-sort* array (inc mid) r)))))

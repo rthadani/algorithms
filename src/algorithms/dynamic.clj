@@ -59,25 +59,7 @@
 (def levenshtein
   (clojure.core/memoize levenshtein*))
 
-(levenshtein "sweep" "sleep")
-
-()
-
-(defn levenshtein-bottom-up
-  [x y])
+;(levenshtein "sweep" "sleep")
 
 
-
-(defn init-matrix-cost
-  [n]
-  (reduce #(conj % []) [] (range 0 n)))
-
-#_(defn matrix-chain-order*)
-  [matrices start end]
-  (if (= start end)
-    0
-    (min (map #(matrix-cost matrices start %) (range start (inc end))))
-    (reduce #(min (matrix-chain-order )) (range start end)))
-#_(defn matrix-chain-order)
-  []
 
