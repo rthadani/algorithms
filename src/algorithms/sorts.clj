@@ -46,15 +46,13 @@
     (< (first left) (first right)) (cons (first left) (merge-arrays (rest left) right))
     :else (cons (first right) (merge-arrays left (rest right)))))
 
-(defn merge-sort*
-  [array l r]
-  (if (>= l r)
-    [(array l)]
-    (let [mid (int (Math/floor (/ (+ l r) 2)))]
-      (merge-arrays (merge-sort* array l mid) (merge-sort* array (inc mid) r)))))
-
 (defn merge-sort
-  [array]
-  (merge-sort* array 0 (dec (count array))))
+  ([array]
+   (merge-sort array 0 (dec (count array))))
+  ([array l r]
+   (if (>= l r)
+     [(array l)]
+     (let [mid (int (Math/floor (/ (+ l r) 2)))]
+       (merge-arrays (merge-sort array l mid) (merge-sort array (inc mid) r))))))
 
-(def to-sort (shuffle (range 0 19)))
+(def to-sort (shuffle (range 0 20)))

@@ -42,7 +42,7 @@
 
 (defprotocol Heap
   (is-empty? [this])
-  (merge [this other])
+  (merge-heap [this other])
   (insert [this value])
   (rank [this])
   (find-min [this])
@@ -60,24 +60,24 @@
 (extend-protocol Heap
   nil
   (rank [_] 0)
-  (merge [_ other] other)
+  (merge-heap [_ other] other)
   (is-empty? [_] true)
 
   LeftistHeap
   (is-empty? [this]
     (nil? this))
 
-  (merge [{this-value :value this-left :left this-right :right :as this}
+  (merge-heap [{this-value :value this-left :left this-right :right :as this}
           {other-value :value other-left :left other-right :right :as other}]
     (cond
       (is-empty? other) this
-      (<= this-value other-value) (->> (merge this-right other)
+      (<= this-value other-value) (->> (merge-heap this-right other)
                                        (makeT this-value this-left))
-      :else (->> (merge this other-right)
+      :else (->> (merge-heap this other-right)
                  (makeT other-value other-left))))
 
   (insert [this value]
-    (merge (->LeftistHeap 1 value nil nil) this))
+    (merge-heap (->LeftistHeap 1 value nil nil) this))
 
   (rank [{this-rank :rank}]
     this-rank)
@@ -86,7 +86,7 @@
     value)
 
   (delete-min [{:keys [left right]}]
-    (merge right left)))
+    (merge-heap right left)))
 
 (-> (->LeftistHeap 1 3 nil nil)
     (insert 2)
