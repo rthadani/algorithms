@@ -41,7 +41,6 @@
       (if (grab-fork (right-fork n))
         true
         (release-fork (left-fork n)))
-
       false)))
 
 (defn release-forks
@@ -71,6 +70,6 @@
 
 (defn begin
   []
-  (doseq [i (range 5)]
+  (doseq [i (range (count forks))]
     (-> (Thread. #(philosopher i))
         .start)))
