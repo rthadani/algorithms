@@ -1,43 +1,5 @@
 (ns algorithms.heaps)
 
-(defn swap [array i j]
-  (assoc (assoc array i (array j)) j (array i)))
-
-(defn max-heapify
-  [array i]
-  (let [left-index  (when (< (inc (* 2 i)) (count array))
-                      (inc (* 2 i)))
-        right-index (when (< (+ 2 (* 2 i)) (count array))
-                      (+ 2 (* 2 i)))
-        max-index   (cond
-                      (every? some? [left-index right-index])
-                      (condp = (max (array left-index) (array right-index) (array i))
-                        (array left-index) left-index
-                        (array right-index) right-index
-                        i)
-                      (some? left-index)
-                      (if (> (array left-index) (array i))
-                        left-index
-                        i)
-                      (some? right-index)
-                      (if (> (array right-index) (array i))
-                        right-index
-                        i)
-                      :else i)]
-    (if (= max-index i)
-      array
-      (max-heapify (swap array max-index i) max-index))))
-
-(defn build-max-heap
-  [array]
-  (loop [i   (dec (int (Math/floor (/ (count array) 2))))
-         acc array]
-    (if (< i 0)
-      acc
-      (recur (dec i) (max-heapify acc i)))))
-
-(build-max-heap [3 2 7 4 10 1 20])
-
 ;;leftist heap
 
 (defprotocol Heap
@@ -96,4 +58,61 @@
     (insert 1)
     (insert 20))
 
+;;binary heap
+(defn parent
+  [index]
+  (/ index 2))
 
+(swap [heap from to]
+      (let [temp (get heap from)])
+      (-> (assoc heap from (get heap to))
+          (assoc to temp)))
+
+(defn heapify-up
+ [heap index is-lighter?]
+ (cond
+  (zero? index) heap
+  (is-lighter? (get heap index) (get heap (parent-index index)))
+     (-> (swap heap index (parent index)) (heapify (parent index) is-lighter?))
+  :else heap))
+
+(defn lightest-child
+  [heap index is-lighter?]
+  (if (>= count (* 2 index))
+    nil
+    (let [left (* 2 index)
+          right (inc (* 2 index))]
+      (if (is-lighter? (get heap left) (get heap right))
+        left
+        right))))
+
+(defn heapify-down
+  [heap index is-lighter?]
+  (if (= index  (dec (count heap)))
+    heap
+    (if-let [lightest-index (lightest-child heap index) ]
+      (if (is-lighter? (get heap lightest-index) (get heap index))
+        (heapify-down (swap heap index lightest-index) lightest is-lighter?)
+        heap))))
+
+(def max-heap-lighter >)
+(def min-heap-lighter <)
+
+(defn insert
+  [heap element is-lighter?]
+  (as-> (conj heap element) $
+    (heapify-up $ (dec (count $) is-lighter?))))
+
+(defn peek
+  [heap]
+  (if (empty? heap)
+    nil
+    (first heap)))
+
+(defn delete-top
+ [heap is-lighter?]
+ (if (or (empty? heap) (empty? (rest heap)))
+   []
+   (-> (swap heap (dec (count heap)) 0))
+       (subvec 0 (count heap))
+       (heapify-down 0 is-lighter?)))
