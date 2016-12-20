@@ -26,16 +26,22 @@
           sorted (insertion-sort (rest array))]
       (insert-in-sorted-array element sorted))))
 
+(defn make-heap
+  [array heap]
+  (if (empty? array)
+    heap
+    (make-heap (rest array) (insert-binary-heap heap (first array) min-heap-lighter))))
+
+(defn sort-heap
+  [heap]
+  (if (empty? heap)
+    '()
+    (cons (find-min-binary-heap heap) (sort-heap (delete-min-binary-heap heap min-heap-lighter)))))
+
 (defn heap-sort
   [array]
-  (let [heap (build-max-heap array)]
-    (loop [heap heap
-           result []]
-      (println "****" heap)
-      (if (empty? heap)
-        result
-        (recur (max-heapify (vec (rest heap)) 0)
-               (cons (first heap) result))))))
+  (-> (make-heap array [])
+     (sort-heap)))
 
 (defn merge-arrays
   [left right]

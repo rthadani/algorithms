@@ -61,7 +61,7 @@
 ;;binary heap
 (defn parent
   [index]
-  (/ index 2))
+  (int (/ index 2)))
 
 (defn swap
   [heap from to]
@@ -80,11 +80,11 @@
 
 (defn lightest-child
   [heap index is-lighter?]
-  (let [left (* 2 index)
-        right (inc (*2 index))]
+  (let [left (inc (* 2 index))
+        right (+ 2 (* 2 index))]
     (cond
-      (>= left count) nil
-      (>= right count) left
+      (>= left (count heap)) nil
+      (>= right (count heap)) left
       (is-lighter? (get heap left) (get heap right)) left
       :else right)))
 
@@ -101,25 +101,23 @@
 (def max-heap-lighter >)
 (def min-heap-lighter <)
 
-(defprotocol Heap)
-
-(defn insert
+(defn insert-binary-heap
   [heap element is-lighter?]
   (as-> (conj heap element) $
         (heapify-up $ (dec (count $)) is-lighter?)))
 
-(defn find-min
+(defn find-min-binary-heap
   [heap]
   (if (empty? heap)
     nil
     (first heap)))
 
-(defn delete-min
+(defn delete-min-binary-heap
   [heap is-lighter?]
   (if (or (empty? heap) (empty? (rest heap)))
     []
     (-> (swap heap (dec (count heap)) 0)
-        (subvec 0 (count heap))
+        (subvec 0 (dec (count heap)))
         (heapify-down 0 is-lighter?))))
 
 (defn increase-key
@@ -131,4 +129,17 @@
   [heap index value is-lighter?]
   (-> (update-in heap [index] - value)
       (heapify-up index is-lighter?)))
+
+(def my-heap (-> []
+                 (insert-binary-heap 2 min-heap-lighter)
+                 (insert-binary-heap 3 min-heap-lighter)
+                 (insert-binary-heap 7 min-heap-lighter)
+                 (insert-binary-heap 4 min-heap-lighter)
+                 (insert-binary-heap 10 min-heap-lighter)
+                 (insert-binary-heap 1 min-heap-lighter)
+                 (insert-binary-heap 5 min-heap-lighter)))
+
+
+
+
 
