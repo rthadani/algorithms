@@ -1,5 +1,6 @@
 (ns algorithms.dynamic
-  (:require [clojure.core.match :refer [match]]))
+  (:require [clojure.core.match :refer [match]]
+            [clojure.set :as set]))
 
 (declare cut-rod)
 
@@ -61,5 +62,38 @@
 
 ;(levenshtein "sweep" "sleep")
 
+;;weighted interval scheduling
+(defn sort-by-finish-times
+  [jobs]
+  (sort-by #(second %) jobs))
 
+(defn make-job-indexes
+  [jobs]
+  (let [sorted-jobs (sort-by second jobs)
+        indexed (into {}
+                      (for [i (range 0 (count sorted-jobs))
+                            j (range 0 (count sorted-jobs))
+                            :let [[si fi _] (nth sorted-jobs i)
+                                  [sj fj _] (nth sorted-jobs j)]
+                            :when (< fj si)]
+                        [i j]))
+        missing-keys (set/difference (into #{} (range 0 (count sorted-jobs))) (keys indexed))
+        indexed-missing-keys (into {} (map (fn [key] [key -1]) missing-keys))]
+    [sorted-jobs (merge indexed indexed-missing-keys {-1 0})]))
+
+(declare wis)
+(defn wis*
+  [jobs job-indexes j]
+  (if (= -1 j)
+    0
+    (let [[_ _ v] (nth jobs j)]
+     (max (+ v (wis jobs job-indexes (get job-indexes j)))
+          (wis jobs job-indexes (dec j))))))
+
+(def wis (memoize wis*))
+
+(defn weighted-interval-schedule
+  [jobs]
+  (let [ [sorted-jobs pjs](make-job-indexes jobs)]
+    (wis sorted-jobs pjs (dec (count sorted-jobs)))))
 

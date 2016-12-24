@@ -3,13 +3,13 @@
             [algorithms.heaps :refer :all]))
 
 (defn quick-sort
-  [array]
+  [array & {:keys [comparator] :or {comparator <=}}]
   (if-not (seq array)
     []
     (concat
-      (quick-sort (filter #(<= % (first array)) (rest array)))
+      (quick-sort (filter #(comparator % (first array)) (rest array)))
       [(first array)]
-      (quick-sort (filter #(> % (first array)) (rest array))))))
+      (quick-sort (filter #(not (comparator % (first array))) (rest array))))))
 
 (defn- insert-in-sorted-array
   [element result]
@@ -61,4 +61,4 @@
      (let [mid (int (Math/floor (/ (+ l r) 2)))]
        (merge-arrays (merge-sort array l mid) (merge-sort array (inc mid) r))))))
 
-(def to-sort (shuffle (range 0 20)))
+(def to-sort (shuffle (range 0 100)))
