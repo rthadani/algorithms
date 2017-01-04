@@ -85,50 +85,29 @@
     [sorted-jobs (merge indexed indexed-missing-keys {-1 -1})]))
 
 (declare wis)
-
 (defn wis*
-  [jobs job-indexes j soln]
-  (if (= -1 j)
-    0
+  [j jobs pj]
+  (if (< j 0)
+    [0 []]
     (let [[_ _ v] (nth jobs j)
-          value-j (max (+ v (wis jobs job-indexes (get job-indexes j) soln))
-                       (wis jobs job-indexes (dec j) soln))]
-      (swap! soln assoc j value-j)
-      value-j)))
-
+          [v+j pjs :as with-j] (wis (get pj j) jobs pj)
+          [v-j _ :as without-j] (wis (dec j) jobs pj)]
+      (if (> (+ v v+j) v-j)
+        [(+ v v+j) (conj pjs j)]
+        without-j))))
 (def wis (memoize wis*))
-
-(defn print-solution-wis
-  [j jobs job-indexes soln]
-  (when (not= j -1)
-    (let [[_ _ v] (nth jobs j)
-        valuepj (if (= -1 (get job-indexes j)) 0 (get soln (get job-indexes j)))
-        valuej-1 (if (< (dec j) 0) 0 (get soln (dec j)))   ]
-      (if (> (+ v valuepj)  valuej-1)
-        (do
-          (println j)
-          (print-solution-wis (get job-indexes j) jobs job-indexes soln))
-        (print-solution-wis (dec j) jobs job-indexes soln)))))
 
 (defn weighted-interval-schedule
   [jobs]
   (let [[sorted-jobs pjs] (make-job-indexes jobs)
         soln (atom (vec (range 0 (count jobs))))]
-    (wis sorted-jobs pjs (dec (count sorted-jobs)) soln)
-    (println soln)))
-
-
-
+    (wis (dec (count sorted-jobs)) sorted-jobs pjs)))
 
 #_(weighted-interval-schedule [[1 2 50]
                                [3 5 20]
                                [6 19 100]
-                 amaz              [2 100 200]])
+                               [2 100 200]])
 
-#_(weighted-interval-schedule-with-soln [[1 2 50]
-                                         [3 5 20]
-                                         [6 19 100]
-                                         [2 100 200]])
 
 ;;Max Subset sum
 ;If w < wi then opt(i, w) = opt(i - 1 ,w)
@@ -138,17 +117,85 @@
   [i weights w]
   (cond
     (< i 0) [0 []]
-    (<= w 0) [0 []]
+    (= w 0) [0 []]
     :else
     (let [wi (weights i)]
       (if (> wi w)
         (subset-sum (dec i) weights w)
-        (let [[v-withouti items-witouti :as without-i] (subset-sum (dec i) weights w)
-              [v-with-i items-with-i as :as with-i] (subset-sum (dec i) weights (- w wi))]
-          (if (> (+ v-with-i wi) v-withouti)
-            [(+ v-with-i wi) (conj items-with-i i)]
-            without-i ))))))
+        (let [[v-i items-i :as without-i] (subset-sum (dec i) weights w)
+              [v+i items+i as :as with-i] (subset-sum (dec i) weights (- w wi))]
+          (if (> (+ v+i wi) v-i)
+            [(+ v+i wi) (conj items+i i)]
+            without-i))))))
 
 (def subset-sum (memoize subset-sum*))
-#_(def soln (atom (vec (range 0 6))))
-#_(subset-sum 5 [3 34 4 12 5 2] 7)
+#_(subset-sum 5 [3 34 4 12 5 2] 13)
+;;for knapsack replace w with v the value of an item when comparing
+
+;;RNA secondary structure
+;Opt(i,j) = max(Opt(i, j - 1), max(1 + Opt(i, t - 1)  + Opt(t + 1, j - 1))
+; where t is atleast 4 units away from j
+(declare rna-struct)
+(defn rna-struct*
+  [rna i j]
+  (println i j)
+  (cond
+    (< i 0) 0
+    (< (- j i) 4) 0
+    (and (= \A (nth rna i)) (not= \U (nth rna j))) 0
+    (and (= \U (nth rna i)) (not= \A (nth rna j))) 0
+    (and (= \C (nth rna i)) (not= \G (nth rna j))) 0
+    (and (= \G (nth rna i)) (not= \C (nth rna j))) 0
+    :else
+    (max (rna-struct rna i (dec j)) (+ 1 (rna-struct rna i (- j 3)) (rna-struct rna (inc (- j 3)) (dec j))))))
+(def rna-struct (memoize rna-struct*))
+
+#_(def rna (seq "ACCGGUAGU"))
+#_(rna-struct* rna 0 (dec (count rna)))
+
+;;Sequence alignment
+;;opt (i,j) = min(alpha(xi,yi) + Opt(i - 1, j - 1), delta + Opt(i - 1, j), delta + Opt(i, j-1))
+; where alpha is the penalty when letters from both sequences are used
+;delta is the penalty when a blank is used
+(declare sequence-alignment)
+(defn sequence-alignment*
+  [x y alpha delta]
+  #_(println x y)
+  (match [(count x) (count y)]
+         [0 0] [0 [] []]
+         [0 _] [(delta (count y)) (vec (repeat (count y) \_)) y]
+         [_ 0] [(delta (count x)) x (vec (repeat (count x) \_))]
+         [_ _] (let [lx (last x)
+                     ly (last y)
+                     a (alpha lx ly)
+                     [ca vec1x vec1y] (sequence-alignment (vec (butlast x)) (vec (butlast y)) alpha delta)
+                     [cx vec2x vec2y] (sequence-alignment (vec (butlast x)) y alpha delta)
+                     [cy vec3x vec3y] (sequence-alignment x (vec (butlast y)) alpha delta)]
+                 (condp = (min (+ a ca) (+ (delta 1) cx) (+ (delta 1) cy))
+                   (+ a ca) [(+ a ca) (conj vec1x lx) (conj vec1y ly)]
+                   (+ (delta 1) cx) [(+ (delta 1) cx) (conj vec2x lx) (conj vec2y \_)]
+                   (+ (delta 1) cy) [(+ (delta 1) cy) (conj vec3x \_) (conj vec3y ly)]))) )
+
+(defn this-delta
+  [how-many]
+  (* 2 how-many))
+
+(defn this-alpha
+  [xi yi]
+  (let [vowels #{\a \e \i \o \u}
+        consonants #{\b \c \d \f \g \h \j \k \l \m \n \p \q \r \s \t \u \v \w \x \y \z}]
+    (cond
+      (= xi yi) 0
+      (and (vowels xi) (vowels yi)) 1
+      (and (consonants xi) (consonants yi)) 1
+      (and (vowels xi) (consonants yi)) 3
+      (and (consonants xi) (vowels yi)) 3)))
+
+(def sequence-alignment (memoize sequence-alignment*))
+
+#_(sequence-alignment
+    (vec (seq "aaa"))
+    (vec (seq "aaa"))
+    this-alpha
+    this-delta)
+
