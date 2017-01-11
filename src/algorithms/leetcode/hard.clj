@@ -15,7 +15,7 @@
       [e (first arr)]
       [(first arr) e])
     (let [mid (mid-index arr)
-        x (nth arr mid)  ]
+          x (nth arr mid)]
       (if (< e x)
         (vec (concat (insert e (subvec arr 0 mid)) (subvec arr mid (count arr))))
         (vec (concat (subvec arr 0 mid) (insert e (subvec arr mid (count arr)))))))))
@@ -42,10 +42,27 @@
           idx2 (mid-index b)
           y (nth b idx2)]
       (if (< x y)
-        (median (subvec a (inc idx1)(count a)) (subvec b 0 idx2))
+        (median (subvec a (inc idx1) (count a)) (subvec b 0 idx2))
         (median (subvec a 0 idx1) (subvec b (inc idx2) (count b)))))))
 
 #_(median [1 2 3 4 5] [6 7 8])
-#_(median  [6 7] [1 2 3 4 5] )
-#_(median [1 3 ] [2 4])
-#_(media)
+#_(median [6 7] [1 2 3 4 5])
+#_(median [1 3] [2 4])
+
+
+(defn regex-match
+  [string pattern]
+  (println string pattern)
+  (cond
+    (and (empty? string))
+    (if (or (empty? pattern) (and (= 2 (count pattern) (= [\. \*] (seq pattern)))))
+      true
+      false)
+    (and (not-empty string) (empty? pattern)) false
+    (and (> (count pattern) 2) (= (second pattern) \*))
+    (cond
+      (= \. (first pattern)) (regex-match (rest string) pattern)
+      (= (first pattern) (first string)) (regex-match (rest string) pattern)
+      :else (regex-match string (rest (rest pattern))))
+    :else
+    (and (= (first string) (first pattern)) (regex-match (rest string) (rest pattern)))))

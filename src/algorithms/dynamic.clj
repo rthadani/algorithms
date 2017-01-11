@@ -194,8 +194,8 @@
 (def sequence-alignment (memoize sequence-alignment*))
 
 #_(sequence-alignment
-    (vec (seq "aaa"))
-    (vec (seq "aaa"))
+    (vec (seq "mean"))
+    (vec (seq "name"))
     this-alpha
     this-delta)
 

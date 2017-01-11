@@ -45,7 +45,7 @@
 (longest-substring "pwwkew")
 
 ;;5
-(defn longest-palindromic-substring
+#_(defn longest-palindromic-substring
   [string]
   (letfn [(is-palindrome? [str] (= (seq str) (reverse str)))]
     (->> (filter is-palindrome? (all-substrings string))
@@ -53,16 +53,28 @@
          (sort-by second)
          last
          first)))
+;;Opt(i,j) = 1 if (i = j)
+;;           2 + Opt(i + 1,j-1) if a[i] = a[j]
+;;           max(opt(i + 1,j), opt (i, j - 1)) otherwise
+(declare lps)
+(defn lps*
+  [s i j]
+  (cond
+    (= i j) [1 [(s i)]]
+    (= (inc i) j) (if (= (s i) (s j)) [2 [(s i) (s j)]] [0 []])
+    :else
+    (let [[both pal1] (lps s (inc i) (dec j))
+          [only-j pal2] (lps s (inc i) j)
+          [only-i pal3] (lps s i (dec j))]
+      (println pal1 pal2 pal3)
+      (cond
+        (= (s i) (s j)) [(+ 2 both) (conj (vec (cons (s i) pal1)) (s j))]
+        (> only-j only-i) [only-j pal2]
+        :else [only-i pal3]))))
+(def lps (memoize lps*))
 
-(defn longest-palindromic-substring-dyn
+(defn longest-palindromic-substring
   [string]
-  (cond
-    (= 1 (count string) 1)
-    (= 2 (count string)) (if (= (first string) (last string)) 2 0)
-    (= (first string) (last string)) ())
-
-  (if (is-pal))
-  (cond
-
-
-    ))
+  (->> (lps (vec (seq string)) 0 (dec (count string)))
+       second
+       (apply str)))
