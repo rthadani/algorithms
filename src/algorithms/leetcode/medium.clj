@@ -46,13 +46,13 @@
 
 ;;5
 #_(defn longest-palindromic-substring
-  [string]
-  (letfn [(is-palindrome? [str] (= (seq str) (reverse str)))]
-    (->> (filter is-palindrome? (all-substrings string))
-         (map (fn [word] [word (count word)]))
-         (sort-by second)
-         last
-         first)))
+    [string]
+    (letfn [(is-palindrome? [str] (= (seq str) (reverse str)))]
+      (->> (filter is-palindrome? (all-substrings string))
+           (map (fn [word] [word (count word)]))
+           (sort-by second)
+           last
+           first)))
 ;;Opt(i,j) = 1 if (i = j)
 ;;           2 + Opt(i + 1,j-1) if a[i] = a[j]
 ;;           max(opt(i + 1,j), opt (i, j - 1)) otherwise
@@ -78,3 +78,168 @@
   (->> (lps (vec (seq string)) 0 (dec (count string)))
        second
        (apply str)))
+
+;;11 container with most water
+
+
+;;12 integer to roman
+(def conversion-map
+  (sorted-map 1 "I"
+              2 "II"
+              3 "III"
+              4 "IV"
+              5 "V"
+              6 "VI"
+              7 "VII"
+              8 "VIII"
+              9 "IX"
+              10 "X"
+              14 "XIV"
+              15 "XV"
+              19 "XIX"
+              20 "XX"
+              30 "XXX"
+              40 "XL"
+              50 "L"
+              60 "LX"
+              70 "LXX"
+              80 "LXXX"
+              90 "XC"
+              100 "C"
+              200 "CC"
+              300 "CCC"
+              400 "CD"
+              500 "D"
+              600 "DC"
+              700 "DCC"
+              800 "DCCC"
+              900 "CM"
+              1000 "M"))
+
+(defn find-largest-match
+  [i integers]
+  (if (= (count integers) 1)
+    (first integers)
+    (let [mid (int (/ (count integers) 2))]
+      (if (>= i (integers mid))
+        (recur i (subvec integers mid))
+        (recur i (subvec integers 0 mid))))))
+
+(defn convert-to-roman
+  [i]
+  (if (zero? i)
+    ""
+    (let [largest-key (find-largest-match i (vec (keys conversion-map)))]
+      (str (get conversion-map largest-key) (convert-to-roman (- i largest-key))))))
+#_(convert-to-roman 1)
+#_(convert-to-roman 6)
+#_(convert-to-roman 12)
+#_(convert-to-roman 99)
+#_(convert-to-roman 3999)
+
+;;13 Roman to integer
+(def digit-map
+  {\I 1
+   \V 5
+   \X 10
+   \L 50
+   \C 100
+   \D 500
+   \M 1000})
+
+(defn roman-to-decimal
+  ([roman] (roman-to-decimal (reverse roman) 0))
+  ([roman current-dec]
+   (if (empty? roman)
+     0
+     (let [digit (get digit-map (first roman))
+           multiplier (if (< digit current-dec) -1 1)]
+       (+ (* digit multiplier) (roman-to-decimal (rest roman) digit))))))
+#_(roman-to-decimal "MCMXCIX")
+
+
+;;14 Longest compn prefix
+(defn longest-common-prefix
+  [strings]
+  (let [sorted (sort-by #(count %) strings)
+        shortest (first sorted)
+        rest (rest sorted)]
+    (loop [shortest shortest]
+      (if (or (zero? (count shortest))
+              (every? #(.startsWith % shortest) rest))
+        shortest
+        (recur (.substring shortest 0 (dec (count shortest))))))))
+#_(longest-common-prefix ["abcd" "abcdef" "abc"])
+
+;;15 3 Sum
+;;Given an array S of n integers, are there elements a, b, c in S such that a + b + c = 0? Find all unique triplets in the array which gives the sum of zero.
+(defn- all-pairs
+  [v]
+  (for [i (range 0 (count v))
+        j (range (inc i) (count v))]
+    [(v i) (v j)]))
+
+(defn three-sum
+  [v]
+  (distinct
+    (for [i (range 0 (count v))
+          j (all-pairs (vec (concat (subvec v 0 i) (subvec v (inc i) (count v)))))
+          :when (zero? (apply + (conj j (v i))))]
+      (sort (conj j (v i))))))
+#_(three-sum [-1, 0, 1, 2, -1, -4])
+
+;;16
+;;Given an array S of n integers, find three integers in S such that the sum is closest to a given number, target. Return the sum of the three integers. You may assume that each input would have exactly one solution.
+
+(defn all-three-sums
+  [v]
+  (distinct
+    (for [i (range 0 (count v))
+          j (all-pairs (vec (concat (subvec v 0 i) (subvec v (inc i) (count v)))))]
+      [(sort (conj j (v i))) (apply + (conj j (v i)))])))
+
+(defn three-sum-closest
+  [v t]
+  (->> (all-three-sums v)
+       (min-key #(Math/abs (- (second %) t)))
+       first
+       second))
+
+
+#_(three-sum-closest [-1 2 1 -4] 1)
+
+;;17 Letter combinations of a phone number
+(defn combine-pairs
+  [p1 p2]
+  (for [x p1
+        y p2]
+    (str x y)))
+(def tel-phone-letters
+  {\2 ["a" "b" "c"]
+   \3 ["d" "e" "f"]
+   \4 ["g" "h" "i"]
+   \5 ["j" "k" "l"]
+   \6 ["m" "n" "o"]
+   \7 ["p" "q" "r" "s"]
+   \8 ["t" "u" "v"]
+   \9 ["w" "x" "y" "z"]})
+
+(defn letter-combos
+  [tel]
+  (reduce
+    (fn [result letter] (combine-pairs result (get tel-phone-letters letter)))
+    (get tel-phone-letters (first tel))
+    (rest tel)))
+
+;;18 4Sum
+;;Given an array S of n integers, are there elements a, b, c, and d in S such that a + b + c + d = target? Find all unique quadruplets in the array which gives the sum of target.
+;;I know what im going to do so im not going to do it get all 3 sums excluding the single char add up the char and then present the first one as an answer
+(defn four-sum)
+
+(defn remove-nth
+  [l]
+  )
+
+
+
+

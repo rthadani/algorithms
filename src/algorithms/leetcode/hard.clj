@@ -54,7 +54,7 @@
   [string pattern]
   (println string pattern)
   (cond
-    (and (empty? string))
+   (empty? string)
     (if (or (empty? pattern) (and (= 2 (count pattern) (= [\. \*] (seq pattern)))))
       true
       false)
@@ -65,4 +65,4 @@
       (= (first pattern) (first string)) (regex-match (rest string) pattern)
       :else (regex-match string (rest (rest pattern))))
     :else
-    (and (= (first string) (first pattern)) (regex-match (rest string) (rest pattern)))))
+    (and (or (= (first pattern \.)) (= (first string) (first pattern))) (regex-match (rest string) (rest pattern)))))

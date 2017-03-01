@@ -111,7 +111,7 @@
 
 ;;Max Subset sum
 ;If w < wi then opt(i, w) = opt(i - 1 ,w)
-; else Opt(i,w) = max (Opt(i-i, w), w(i) + Opt(i - 1, w - wi))
+; else Opt(i,w) = max (Opt(i-1, w), w(i) + Opt(i - 1, w - wi))
 (declare subset-sum)
 (defn subset-sum*
   [i weights w]
@@ -122,7 +122,7 @@
     (let [wi (weights i)]
       (if (> wi w)
         (subset-sum (dec i) weights w)
-        (let [[v-i items-i :as without-i] (subset-sum (dec i) weights w)
+        (let [[v-i  _ :as without-i] (subset-sum (dec i) weights w)
               [v+i items+i as :as with-i] (subset-sum (dec i) weights (- w wi))]
           (if (> (+ v+i wi) v-i)
             [(+ v+i wi) (conj items+i i)]
