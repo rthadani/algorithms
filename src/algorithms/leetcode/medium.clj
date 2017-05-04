@@ -66,7 +66,6 @@
     (let [[both pal1] (lps s (inc i) (dec j))
           [only-j pal2] (lps s (inc i) j)
           [only-i pal3] (lps s i (dec j))]
-      (println pal1 pal2 pal3)
       (cond
         (= (s i) (s j)) [(+ 2 both) (conj (vec (cons (s i) pal1)) (s j))]
         (> only-j only-i) [only-j pal2]
@@ -234,7 +233,7 @@
 ;;18 4Sum
 ;;Given an array S of n integers, are there elements a, b, c, and d in S such that a + b + c + d = target? Find all unique quadruplets in the array which gives the sum of target.
 ;;I know what im going to do so im not going to do it get all 3 sums excluding the single char add up the char and then present the first one as an answer
-(defn four-sum)
+;;(defn four-sum)
 
 (defn remove-nth
   [l]

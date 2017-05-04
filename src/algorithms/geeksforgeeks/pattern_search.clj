@@ -6,25 +6,24 @@
   (for [i (range 0 (inc (- (count string) (count pattern))))
         :let [substr (.substring string i (+ i (count pattern)))]
         :when (= pattern substr)]
-  i))
+    i))
 #_(naive-search "AABA" "AABAACAADAABAABA")
 
 ;;kmp
-(defn build-lps
+(defn build-t-table
   [pattern]
-  (->>
-  (for [i (range 0 (dec (count pattern)))
-        j (range 0 i)
-        :let [
-              dbg (println i j)
-              prefix (.substring pattern j i)
-              suffix-ends-at (min (count pattern) (+ i j))
-              suffix (.substring pattern (inc i) suffix-ends-at)
-              ]
+  (loop
+    [i 0
+     pos 1
+     acc [0]]
+    (cond
+      (= pos (count pattern)) acc
+      (= (nth pattern pos) (nth pattern i)) (recur (inc i) (inc pos) (conj acc (inc i)))
+      :else (if (zero? i)
+              (recur i (inc pos) (conj acc 0))
+              (recur (nth acc (dec i)) pos acc)))))
+#_(build-t-table "AAAA")
+#_(build-t-table "AAACAAAAAC")
 
-        :when (= prefix suffix)]
-              [i (count suffix)])
-  (group-by first)
-  #_(map (fn [i vals] [i (map second vals)]))
-  #_(map #(apply max (second %)))))
-#_(build-lps "AAAA")
+(defn knuth-morris-pratt
+  [string pattern])
