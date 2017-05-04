@@ -199,3 +199,12 @@
     this-alpha
     this-delta)
 
+;;Longest increasing subsequence
+;;Opt(i) = 1 + Opt(i - 1) if e[i - 1] <= e[i]
+(declare lis)
+(defn lis*
+  [array]
+  (if (empty? array)
+    0
+    (let [])))
+(def lis (memoize lis*))
