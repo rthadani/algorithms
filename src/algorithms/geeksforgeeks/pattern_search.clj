@@ -13,9 +13,7 @@
 (defn build-t-table
   [pattern]
   (loop
-    [i 0
-     pos 1
-     acc [0]]
+    [i 0 pos 1 acc [0]]
     (cond
       (= pos (count pattern)) acc
       (= (nth pattern pos) (nth pattern i)) (recur (inc i) (inc pos) (conj acc (inc i)))
@@ -26,4 +24,16 @@
 #_(build-t-table "AAACAAAAAC")
 
 (defn knuth-morris-pratt
-  [string pattern])
+  ([pattern string]
+   (knuth-morris-pratt pattern string (build-t-table pattern)))
+  ([pattern string t]
+   (println t)
+   (loop [m 0 i 0 acc []]
+     #_(println m i acc)
+     (cond
+       (>= (+ m i) (count string)) acc
+       (= i (dec (count pattern))) (recur (- (+ m i) (nth t (dec i))) (nth t (dec i)) (conj acc m))
+       (= (nth pattern i) (nth string (+ m i))) (recur m (inc i) acc)
+       :else (if (zero? i)
+               (recur (inc m) i acc)
+               (recur (- (+ m i) (nth t (dec i))) (nth t (dec i)) acc))))))
