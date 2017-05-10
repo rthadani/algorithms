@@ -47,7 +47,7 @@
     (fn [acc key] (-> (* acc R)
                       (+ (int key))
                       (mod mod-prime)))
-       key))
+    key))
 
 (defn precompute-leading-digit-remover
   [pattern mod-prime R]
@@ -62,18 +62,18 @@
 
 ;;at each stage remove leading hash and add the trailing char tedious but easy
 #_(defn rabin-karp
-  [pattern string]
-  (let [mod-prime (longValue (BigInteger/probablePrime 31 (Random.)))
-        remove-value (precompute-leading-digit-remover pattern mod-prime 256)
-        pattern-hash (hash-rk pattern 256 mod-prime)
-        [i text text-hash]]
-    (loop [i 0
-           text-hash (hash-rk text 256 mod-prime)
-           acc []]
-      (cond
-        (>= i (count string)) acc
-        (and (= text-hash pattern-hash) (check text pattern)) (recur (inc i) (.substring string (inc i) (count pattern)))))
-    ))
+    [pattern string]
+    (let [mod-prime    (longValue (BigInteger/probablePrime 31 (Random.)))
+          remove-value (precompute-leading-digit-remover pattern mod-prime 256)
+          pattern-hash (hash-rk pattern 256 mod-prime)
+          [i text text-hash]]
+      (loop [i         0
+             text-hash (hash-rk text 256 mod-prime)
+             acc       []]
+        (cond
+          (>= i (count string)) acc
+          (and (= text-hash pattern-hash) (check text pattern)) (recur (inc i) (.substring string (inc i) (count pattern)))))
+      ))
 
 ;;finite automata
 (defn copy-row-value
@@ -87,18 +87,21 @@
     (reduce
       (fn [[lps i] char]
         (assoc! fa-table i (get fa-table lps))
-        (let [row (get fa-table i)]
-          (assoc! fa-table i (assoc row (int char) (inc i))))
-        [(get-in fa-table [lps (int char)]) (inc i)])
+        (let [row      (get fa-table i)
+              next-lps (get-in fa-table [lps (int char)])]
+          (assoc! fa-table i (assoc row (int char) (inc i)))
+          (when (= i (dec (count pattern)))
+            (assoc! fa-table (inc i) (get fa-table next-lps)))
+          [next-lps (inc i)]))
       [0 1]
-      (str (rest pattern) (first pattern)))
+      (rest pattern))
     (persistent! fa-table)))
 
-(defn fa-search
+(defn finite-automata
   [pattern string]
   (let [sm (make-state-machine pattern)]
     (loop [i 0 j 0 acc []]
       (cond
         (= i (count string)) acc
-        (= j (count pattern) (recur (inc i) (get-in sm [j (int (nth string i))]) (conj acc (- i (count pattern)))))
+        (= j (dec (count pattern))) (recur (inc i) (get-in sm [j (int (nth string i))]) (conj acc (inc (- i (count pattern)))))
         :else (recur (inc i) (get-in sm [j (int (nth string i))]) acc)))))
