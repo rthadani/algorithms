@@ -7,4 +7,5 @@
                  [org.clojure/core.async "0.2.374"]
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [cheshire "5.5.0"]
+                 [clj-time "0.8.0"]
                  [prismatic/plumbing "0.5.3"]])
