@@ -147,4 +147,17 @@
   [values]
   (->> (partition-all 2)))
 
+;;trie
+(defn add-to-trie [trie x]
+  (assoc-in trie x (merge (get-in trie x) {:val x :terminal true})))
 
+(defn in-trie? [trie x]
+  (:terminal (get-in trie x) false))
+
+(defn prefix-matches [trie prefix]
+  (keep :val (tree-seq map? vals (get-in trie prefix))))
+
+(defn build-trie [coll]
+  (reduce add-to-trie {} coll))
+
+#_(def x (build-trie ["homework" "home" "water"]))

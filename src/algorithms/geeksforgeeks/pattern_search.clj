@@ -30,7 +30,6 @@
   ([pattern string t]
    (println t)
    (loop [m 0 i 0 acc []]
-     #_(println m i acc)
      (cond
        (>= (+ m i) (count string)) acc
        (= i (dec (count pattern))) (recur (- (+ m i) (nth t (dec i))) (nth t (dec i)) (conj acc m))

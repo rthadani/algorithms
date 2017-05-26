@@ -6,6 +6,9 @@
             [clj-time.predicates :as tp]))
 
 ;;first attempt
+;;given a reservation list that contains the start and end end times for a day's reservations
+;;produce a reservation list for bicycles
+
 #_(defn make-reservation
     [return-list acc available [start end req]]
     (let [before-request (+ available (get return-list start 0))]
@@ -72,7 +75,7 @@
         [#{} available])
       (make-final-list reservation-list))))                 ;finally use the indexes to produce a reservation list
 
-(rent-bicycles
+#_(rent-bicycles
   [[9 11 20]
    [10 12 20]
    [12 13 5]
