@@ -1,5 +1,6 @@
 (ns algorithms.geeksforgeeks.dynamic
-  (:require [clojure.tools.trace :refer [trace trace-forms]]))
+  (:require [clojure.tools.trace :refer [trace trace-forms]]
+            [clojure.string :as str]))
 
 ;;longest increasing subsequence
 ;;Opt(i) = 1 + max(Opt(j)) if elem(i) > elem(j) and j < i)
@@ -27,19 +28,19 @@
 (defn lcs*
   [x y]
   (cond
-   (or (nil? x) (nil? y)) [0 []]
-   (= (last x) (last y)) (let [[l r] (lcs (butlast x) (butlast y))]
-                           [(inc l) (conj r (last x))])
-   :else
-   (let [[lxy-1 ry-1] (lcs  x (butlast y))
-         [lx-1y rx-1] (lcs  (butlast x) y) ]
-     (if (> lxy-1 lx-1y)
-       [lxy-1 ry-1]
-       [lx-1y rx-1]))))
+    (or (nil? x) (nil? y)) [0 []]
+    (= (last x) (last y)) (let [[l r] (lcs (butlast x) (butlast y))]
+                            [(inc l) (conj r (last x))])
+    :else
+    (let [[lxy-1 ry-1] (lcs x (butlast y))
+          [lx-1y rx-1] (lcs (butlast x) y)]
+      (if (> lxy-1 lx-1y)
+        [lxy-1 ry-1]
+        [lx-1y rx-1]))))
 
 (def lcs (memoize lcs*))
 
-#_ (lcs "AGGTAB" "GXTXAYB")
+#_(lcs "AGGTAB" "GXTXAYB")
 
 ;;Min cost Path
 ;; Find the min cost to walk through a matrix where cell is cost to pass trhough
@@ -48,8 +49,8 @@
 (declare min-cost-path)
 (defn min-cost-path*
   [mat m n]
-  (if (or  (= m 0) (= n 0))
-    [(+ (get-in mat [0 0]) (get-in mat [m n]))  [[0 0] [m n]]]
+  (if (or (= m 0) (= n 0))
+    [(+ (get-in mat [0 0]) (get-in mat [m n])) [[0 0] [m n]]]
     (let [[costm-1n-1 arrm-1n-1] (min-cost-path mat (dec m) (dec n))
           [costmn-1 arrmn-1] (min-cost-path mat m (dec n))
           [costm-1n arrm-1n] (min-cost-path mat (dec m) n)
@@ -60,8 +61,9 @@
         costm-1n [(+ costmn costm-1n) (conj arrm-1n [m n])]))))
 (def min-cost-path (memoize min-cost-path*))
 #_(min-cost-path [[1 2 3]
-                   [4 8 2]
-                   [1 5 3]] 2 2)
+                  [4 8 2]
+                  [1 5 3]] 2 2)
+
 ;;r(n) = (max(0<=i<=n) (p[i] + r(n-i)))
 (declare cut-rod)
 (defn cut-rod*
@@ -69,9 +71,9 @@
   (if (zero? n)
     0
     (->>
-     (for [i (range (dec n) -1 -1)]
-       (+  (p i) (cut-rod p (- n i 1))))
-     (apply max))))
+      (for [i (range (dec n) -1 -1)]
+        (+ (p i) (cut-rod p (- n i 1))))
+      (apply max))))
 (def cut-rod (memoize cut-rod*))
 #_(cut-rod [1 5 8 9 10 17 17 20 24 30] 4)
 
@@ -80,4 +82,78 @@
 (declare msis)
 
 #_(def msis (memoize msis*))
-#_ (msis [1 101 2 3 100 4 5])
+#_(msis [1 101 2 3 100 4 5])
+
+;;justify-text
+; jt(i) = arg-min(badness[i, j] + jt(j)) where i<j<n
+;       = 0 if i = n
+(declare badness)
+(declare arg-min)
+
+(defn justify-text* [words width dp breaks]
+  (doseq [i (range (count words) -1 -1)
+          :let [temp  (for [j (range (inc i) (inc (count words)))]
+                        (+ (@dp j) (badness (subvec words i j) width)))
+                index (arg-min temp)]]
+    (println index)
+    (swap! breaks assoc i (+ index i 1))
+    (swap! dp assoc i (if (empty? temp) 0 (nth temp index))))
+  @breaks)
+
+(declare jt)
+#_(defn justify-text*
+    [words width breaks]
+    (if (empty? words)
+      0
+      (first
+        (for [i (range (dec (count words)) -1 -1)
+              :let [x     (for [j (range (inc i) (count words))]
+                            (+ (badness (subvec words i j) width) (jt (subvec words j) width breaks)))
+                    index (arg-min x)
+                    _     (swap! breaks assoc i (+ index i 1))]]
+          (if (empty? x)
+            0
+            (nth x index))))))
+
+(defn badness
+  [words width]
+  (let [line-length (reduce
+                      (fn [c w]
+                        (if (> c width) (reduced Integer/MAX_VALUE) (+ c (count w))))
+                      (dec (count words))
+                      words)]
+    (if (> line-length width)
+      Integer/MAX_VALUE
+      (Math/pow (- width line-length) 3))))
+
+(defn arg-min
+  [array]
+  (println "argmin" array)
+  (if (empty? array)
+    0
+    (->> (map vector (range 0 (count array)) array)
+         (apply min-key second)
+         first)))
+
+#_(def jt (memoize justify-text*))
+
+(defn output-text
+  [words breaks]
+  (let [[_ lb] (reduce (fn [[i lb] _]
+                         (if (= i (count words))
+                           (reduced [i lb])
+                           [(breaks i) (conj lb (breaks i))]))
+                       [0 []] breaks)]
+     (println (partition-all 2 1 lb))
+    (map (fn [[s e]] (->> (if (or (nil? e) (zero? e)) (subvec words s) (subvec words (dec s) e))
+                          (str/join " "))) (partition-all 2 1 lb))))
+
+(defn justify-text
+  [sentence width]
+  (let [words  (vec (str/split sentence #" "))
+        breaks (atom (vec (repeat (count words) 0)))
+        dp     (atom (vec (repeat (count words) 0)))]
+    (justify-text* words width dp breaks)
+    (println @dp @breaks)))
+#_(justify-text "rohit thadani likes to code dp" 10)
+
