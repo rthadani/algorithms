@@ -49,8 +49,13 @@
 (declare min-cost-path)
 (defn min-cost-path*
   [mat m n]
-  (if (or (= m 0) (= n 0))
-    [(+ (get-in mat [0 0]) (get-in mat [m n])) [[0 0] [m n]]]
+  (cond
+   (and (= m 0) (= n 0)) [(get-in mat [0 0]) [[0 0]]]
+   (zero? m)  (let [[c r] (min-cost-path mat m (dec n))]
+                [(+ c (get-in mat [m n])) (conj r [m n])])
+   (zero? n)  (let [[c r] (min-cost-path mat (dec m) n)]
+                [(+ c (get-in mat [m n])) (conj r [m n])])
+   :else
     (let [[costm-1n-1 arrm-1n-1] (min-cost-path mat (dec m) (dec n))
           [costmn-1 arrmn-1] (min-cost-path mat m (dec n))
           [costm-1n arrm-1n] (min-cost-path mat (dec m) n)
@@ -69,13 +74,15 @@
 (defn cut-rod*
   [p n]
   (if (zero? n)
-    0
+    [0 []]
     (->>
-      (for [i (range (dec n) -1 -1)]
-        (+ (p i) (cut-rod p (- n i 1))))
-      (apply max))))
+     (for [i (range (dec n) -1 -1)
+           :let [[this-cut allcuts] (cut-rod p (- n i 1))]]
+       [(+ (p i) this-cut) (conj allcuts i)])
+     (apply max-key first))))
+
 (def cut-rod (memoize cut-rod*))
-#_(cut-rod [1 5 8 9 10 17 17 20 24 30] 4)
+#_(cut-rod [1 5 8 9 10 17 17 20 24 30] 10)
 
 
 ;;max sum increasing subsequence
@@ -87,44 +94,21 @@
 ;;justify-text
 ; jt(i) = arg-min(badness[i, j] + jt(j)) where i<j<n
 ;       = 0 if i = n
-(declare badness)
-(declare arg-min)
 
-(defn justify-text* [words width dp breaks]
-  (doseq [i (range (count words) -1 -1)
-          :let [temp  (for [j (range (inc i) (inc (count words)))]
-                        (+ (@dp j) (badness (subvec words i j) width)))
-                index (arg-min temp)]]
-    (println index)
-    (swap! breaks assoc i (+ index i 1))
-    (swap! dp assoc i (if (empty? temp) 0 (nth temp index))))
-  @breaks)
-
-(declare jt)
-#_(defn justify-text*
-    [words width breaks]
-    (if (empty? words)
-      0
-      (first
-        (for [i (range (dec (count words)) -1 -1)
-              :let [x     (for [j (range (inc i) (count words))]
-                            (+ (badness (subvec words i j) width) (jt (subvec words j) width breaks)))
-                    index (arg-min x)
-                    _     (swap! breaks assoc i (+ index i 1))]]
-          (if (empty? x)
-            0
-            (nth x index))))))
+(defn line-length
+  [words]
+  (if (empty? words)
+    0
+    (reduce (fn [c w] (+ c (count w)))
+            (dec (count words))
+            words)))
 
 (defn badness
   [words width]
-  (let [line-length (reduce
-                      (fn [c w]
-                        (if (> c width) (reduced Integer/MAX_VALUE) (+ c (count w))))
-                      (dec (count words))
-                      words)]
-    (if (> line-length width)
+  (let [l (line-length words)]
+    (if (> l width)
       Integer/MAX_VALUE
-      (Math/pow (- width line-length) 3))))
+      (Math/pow (- width l) 3))))
 
 (defn arg-min
   [array]
@@ -134,8 +118,6 @@
     (->> (map vector (range 0 (count array)) array)
          (apply min-key second)
          first)))
-
-#_(def jt (memoize justify-text*))
 
 (defn output-text
   [words breaks]
@@ -147,13 +129,39 @@
      (println (partition-all 2 1 lb))
     (map (fn [[s e]] (->> (if (or (nil? e) (zero? e)) (subvec words s) (subvec words (dec s) e))
                           (str/join " "))) (partition-all 2 1 lb))))
+(declare justify-text)
+(defn justify-text*
+  [words width]
+  (if (empty? words)
+   0
+   (let [b (for [i (range 1 (count words))
+                 :let [_ (println (subvec words i))]
+                 ]
+            (+ (badness (subvec words i) width) (justify-text (subvec words 0 i) width)))]
+     (println b)
+     (if (empty? b)
+       0
+       (apply min b)))))
 
-(defn justify-text
+(def justify-text (memoize justify-text*))
+
+#_(defn justify-text* [words width dp breaks]
+  (doseq [i (range (count words) -1 -1)
+          :let [temp  (for [j (range (inc i) (inc (count words)))]
+                        (+ (@dp j) (badness (subvec words i j) width)))
+                index (arg-min temp)]]
+    (println index)
+    (swap! breaks assoc i (+ index i 1))
+    (swap! dp assoc i (if (empty? temp) 0 (nth temp index))))
+  @breaks)
+
+#_(defn justify-text
   [sentence width]
   (let [words  (vec (str/split sentence #" "))
         breaks (atom (vec (repeat (count words) 0)))
         dp     (atom (vec (repeat (count words) 0)))]
     (justify-text* words width dp breaks)
     (println @dp @breaks)))
-#_(justify-text "rohit thadani likes to code dp" 10)
+#_(justify-text (str/split "rohit thadani likes to code dp" #" ") 10)
+
 
