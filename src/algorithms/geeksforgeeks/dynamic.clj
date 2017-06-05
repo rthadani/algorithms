@@ -108,7 +108,7 @@
   (let [l (line-length words)]
     (if (> l width)
       Integer/MAX_VALUE
-      (Math/pow (- width l) 3))))
+      (Math/pow (- width l) 2))))
 
 (defn arg-min
   [array]
@@ -119,49 +119,20 @@
          (apply min-key second)
          first)))
 
-(defn output-text
-  [words breaks]
-  (let [[_ lb] (reduce (fn [[i lb] _]
-                         (if (= i (count words))
-                           (reduced [i lb])
-                           [(breaks i) (conj lb (breaks i))]))
-                       [0 []] breaks)]
-     (println (partition-all 2 1 lb))
-    (map (fn [[s e]] (->> (if (or (nil? e) (zero? e)) (subvec words s) (subvec words (dec s) e))
-                          (str/join " "))) (partition-all 2 1 lb))))
 (declare justify-text)
 (defn justify-text*
   [words width]
   (if (empty? words)
    0
-   (let [b (for [i (range 1 (count words))
+   (let [b (for [i (range 0 (count words))
                  :let [_ (println (subvec words i))]
                  ]
-            (+ (badness (subvec words i) width) (justify-text (subvec words 0 i) width)))]
-     (println b)
+            (+ (badness  (subvec words i) width)
+               (justify-text (subvec words 0 i) width)))]
      (if (empty? b)
        0
        (apply min b)))))
 
 (def justify-text (memoize justify-text*))
-
-#_(defn justify-text* [words width dp breaks]
-  (doseq [i (range (count words) -1 -1)
-          :let [temp  (for [j (range (inc i) (inc (count words)))]
-                        (+ (@dp j) (badness (subvec words i j) width)))
-                index (arg-min temp)]]
-    (println index)
-    (swap! breaks assoc i (+ index i 1))
-    (swap! dp assoc i (if (empty? temp) 0 (nth temp index))))
-  @breaks)
-
-#_(defn justify-text
-  [sentence width]
-  (let [words  (vec (str/split sentence #" "))
-        breaks (atom (vec (repeat (count words) 0)))
-        dp     (atom (vec (repeat (count words) 0)))]
-    (justify-text* words width dp breaks)
-    (println @dp @breaks)))
-#_(justify-text (str/split "rohit thadani likes to code dp" #" ") 10)
-
+#_(justify-text (str/split "tushar roy likes to code" #" ") 10)
 
