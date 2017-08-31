@@ -209,5 +209,21 @@
     (let [])))
 (def lis (memoize lis*))
 
+;;subproblems
+;; Opt(i) = min(1 + (min Opt(i - j) ) for all prev  i <= j
+(defn num-squares*
+  [n]
+  (cond
+   (< n 0) Integer/MAX_VALUE
+   (zero? n) 1
+   :else
+   (for [i (range 0 n)
+         j (range 0 i)]
+     (min (num-squares* i) (inc (num-squares* (- i (Math/pow j 2)))))
+
+     )
+   (1 + (min (num-squares* (dec n)) (num-squares* (- n (Math/pow (dec n) 2))))) ))
+
+
 
 
