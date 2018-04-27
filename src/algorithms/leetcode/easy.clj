@@ -81,9 +81,21 @@
   (->> (.trim string)
        make+
        atoi+
-       (assign-str-sign (.trim string)) ))
+       (assign-str-sign (.trim string))))
 
 ;;9 palindrome number
 (defn is-palidrome-number
   [number]
   (= number (reverse-integer number)))
+
+;;38 Count and say
+(defn to-string [say]
+  (->> (partition-by identity say)
+     (mapcat (fn [chars] [(count chars) (first chars)]))
+     (apply str)))
+
+(defn count-and-say
+  [n]
+  (if (= n 1)
+    "1"
+    (to-string (count-and-say (dec n)))))

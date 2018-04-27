@@ -235,9 +235,18 @@
 ;;I know what im going to do so im not going to do it get all 3 sums excluding the single char add up the char and then present the first one as an answer
 ;;(defn four-sum)
 
-(defn remove-nth
-  [l]
-  )
+
+
+;; 209 Min size subarray sum
+(defn min-size-subarray-sum
+  [s nums]
+  (apply min
+         (for [i (range 0 (count nums))
+               j (range i (count nums))
+               :let [_ (prn i j (apply + (subvec nums i j)))]
+               :when (>= (apply + (subvec nums i j)) s)]
+           (dec (- j i)))))
+
 
 
 
