@@ -40,4 +40,5 @@
       (println "")))
  (println))
 
-(print-board (place-queens 4))
+#_(print-board (place-queens 4))
+#_(place-queens 4)
