@@ -132,21 +132,6 @@
        (conj-rb-tree 7)
        (conj-rb-tree 8)))
 
-;Merkle
-(defn md5hash
-  [val]
-  (->>
-    (doto
-      (MessageDigest/getInstance "MD5")
-      (.update (.getBytes (String. val))))
-    .digest
-    (map #(format "%02x" %))
-    (apply str)))
-
-(defn merkle-tree
-  [values]
-  (->> (partition-all 2)))
-
 ;;trie
 (defn add-to-trie [trie x]
   (assoc-in trie x (merge (get-in trie x) {:val x :terminal true})))
@@ -161,3 +146,20 @@
   (reduce add-to-trie {} coll))
 
 #_(def x (build-trie ["homework" "home" "water"]))
+
+
+;;any-tree
+(defn create-tree
+  ([nodes]
+   (create-tree nodes (atom 0)))
+  ([nodes skip-nodes]
+   (let [current-node @skip-nodes
+         root (if (>= current-node (count nodes)) nil (nth nodes current-node)) ]
+     (swap! skip-nodes inc)
+     (if (nil? root)
+       root
+       (-> (new-bst-node root)
+         (assoc :l (create-tree nodes skip-nodes))
+         (assoc :r (create-tree nodes skip-nodes)))))))
+
+#_ (def tree (create-tree [1 2 nil nil 3 4 nil nil 5 nil nil]))
