@@ -30,7 +30,6 @@
             remaining (rest words)
             found (keywords word)
             latest-keywords (if found (assoc found-keywords word i) found-keywords)]
-        (println found word latest-keywords)
         (if found
           (recur remaining latest-keywords (min current-size (subarray-length keywords latest-keywords)) (inc i))
           (recur remaining latest-keywords current-size (inc i)))))))    
