@@ -25,3 +25,22 @@
 
 (bit-shift-right 2 1)
 
+(defn venmo-share 
+  ([amounts]
+   (venmo-share (map-indexed (fn [i a] [i a]) amounts)
+                (int (/ (apply + amounts) (count amounts)))))
+  ([idx-amounts required]
+   (println required)
+   (loop
+    [remaining (map (fn [[i a]] [i (- required a)]) idx-amounts)
+     result []]
+     (if (every? (fn [[_ a]] (<= a 0)) remaining)
+       result
+       (let [[min-idx debit] (apply min-key second remaining)
+             [max-idx credit] (apply max-key second remaining)
+             next-round (remove (fn [[idx _]] (or (= idx min-idx) (= idx max-idx))) remaining)
+             transfer-amount (if (>= (Math/abs debit) credit) credit (Math/abs debit))]
+         (recur (conj next-round [min-idx (+ debit transfer-amount)] [max-idx (- credit transfer-amount)])
+                (conj result (str "transfer " transfer-amount " from " max-idx " to " min-idx))))))))
+
+#_ (venmo-share [1000 1100 100 400])

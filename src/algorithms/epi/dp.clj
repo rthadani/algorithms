@@ -16,26 +16,25 @@
 #_ (score-combinations 12 [2 3 7])
 
 (declare levenshtein)
-(defn levenshtein* 
+(defn levenshtein*
   [w1 w2]
-  (println w1 w2)
-  (cond 
-    (zero? (count w1)) [(count w2) [(str "delete " (count w2) " chars from w2" )]]
-    (zero? (count w2)) [(count w1) [(str "delete " (count w1) " chars from w1" )] ]
-    (= (last w1) (last w2)) 
+  (cond
+    (zero? (count w1)) (do (println "finished w1") [(count w2) [(str "delete " (count w2) " chars from w2")]])
+    (zero? (count w2)) (do (println "finished w2") [(count w1) [(str "delete " (count w1) " chars from w1")]])
+    (= (last w1) (last w2))
     (let [[cost directions] (levenshtein (butlast w1) (butlast w2))]
       [cost (conj directions (str "skip " (last w1)))])
-    :else 
+    :else
     (let [[substitute-cost sc-dirs] (levenshtein (butlast w1) (butlast w2))
           [insert-cost ins-dirs] (levenshtein w1 (butlast w2))
-          [delete-cost del-dirs] (levenshtein (butlast w2) w2)
+          [delete-cost del-dirs] (levenshtein (butlast w1) w2)
           min-cost (min substitute-cost insert-cost delete-cost)]
       (condp = min-cost
-            substitute-cost [(inc min-cost) (conj sc-dirs (str "substitute letters " (last w1) " " (last w2)))]
-            insert-cost [(inc min-cost) (conj ins-dirs (str "insert letter " (last w2) " in " w1))]
-            delete-cost [(inc min-cost) (conj del-dirs (str "delete letter " (last w1)))]))))
+        substitute-cost [(inc min-cost) (conj sc-dirs (str "substitute letters " (last w1) " " (last w2)))]
+        insert-cost [(inc min-cost) (conj ins-dirs (str "insert letter " (last w2) " in " w1))]
+        delete-cost [(inc min-cost) (conj del-dirs (str "delete letter " (last w1)))]))))
 (def levenshtein (memoize levenshtein*))
-#_ (levenshtein "saturday" "sunday")
+#_ (levenshtein (seq  "saturday") (seq "sunday"))
 
 
 (declare num-ways)
