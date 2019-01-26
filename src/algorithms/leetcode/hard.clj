@@ -1,5 +1,6 @@
-#_(ns algorithms.leetcode.hard
-    (:require [clojure.core.match :refer [match]]))
+(ns algorithms.leetcode.hard
+    (:require [clojure.core.match :refer [match]]
+              [clojure.data.priority-map :refer [priority-map-by]]))
 
 ;;There are two sorted arrays nums1 and nums2 of size m and n respectively.
 ;; Find the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).
@@ -50,19 +51,61 @@
 #_(median [1 3] [2 4])
 
 
-(defn regex-match
+(defn is-match
   [string pattern]
-  (println string pattern)
+(println string pattern )
   (cond
-   (empty? string)
-    (if (or (empty? pattern) (and (= 2 (count pattern) (= [\. \*] (seq pattern)))))
-      true
-      false)
-    (and (not-empty string) (empty? pattern)) false
-    (and (> (count pattern) 2) (= (second pattern) \*))
-    (cond
-      (= \. (first pattern)) (regex-match (rest string) pattern)
-      (= (first pattern) (first string)) (regex-match (rest string) pattern)
-      :else (regex-match string (rest (rest pattern))))
+    (empty? pattern) (empty? string)
+    (= 1 (count pattern)) (and (not (empty? string)) (and (or (= \. (first pattern)) (= (first pattern) (first string)))
+                                                          (is-match (rest string) (rest pattern))))
+    (not= (second pattern) \*) (and (or (= (first pattern) \.) (= (first pattern) (first string)))
+                                    (is-match (rest string) (rest pattern)))
+    
     :else
-    (and (or (= (first pattern \.)) (= (first string) (first pattern))) (regex-match (rest string) (rest pattern)))))
+    (or (is-match string (rest (rest pattern)))
+        (loop [c string]
+          (cond
+            (empty? c) false
+            (or (= \. (first pattern)) (= (first pattern) (first c)))
+            (or (is-match (rest c) (rest (rest pattern))) (recur (rest c)))
+            :else (recur (rest c)))))))
+
+#_ (is-match "aab" "a.*b")
+
+
+
+(defn- split-buildings
+  [buildings]
+  (->> buildings
+       (mapcat (fn [[s e h]] [{:x s :h h :s true} {:x e :h h :s false}]))
+       (sort (fn [x y] (if-not (= (:x x) (:x y)) 
+                         (- (:x x) (:x y))
+                         (if (:s x) 1 -1))))))
+
+(defn- process-next-entry
+  [{:keys [x h s]} result heap]
+  (let [[_ max-height] (first heap)]
+    (if s
+      (if (> h max-height)
+        [(conj result [x h]) (assoc heap h h)]
+        [result (assoc heap h h)])
+      (let [new-heap (dissoc heap h)
+            [_ current-top] (first new-heap)]
+        (if (not= current-top max-height)
+          [(conj result [x current-top]) new-heap]
+          [result new-heap])))))
+
+(defn- sky-line*
+  [buildings]
+  (->> buildings
+       split-buildings
+       (reduce
+        (fn [[result heap] entry]
+          (process-next-entry entry result heap))
+        [[] (priority-map-by > 0 0)])))
+
+(defn sky-line
+  [buildings]
+  (first (sky-line* buildings)))
+
+#_ (sky-line [ [2 9 10], [3 7 15], [5 12 12], [15 20 10], [19 24 8]])

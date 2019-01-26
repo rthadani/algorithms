@@ -30,7 +30,6 @@
    (venmo-share (map-indexed (fn [i a] [i a]) amounts)
                 (int (/ (apply + amounts) (count amounts)))))
   ([idx-amounts required]
-   (println required)
    (loop
     [remaining (map (fn [[i a]] [i (- required a)]) idx-amounts)
      result []]
@@ -44,3 +43,27 @@
                 (conj result (str "transfer " transfer-amount " from " max-idx " to " min-idx))))))))
 
 #_ (venmo-share [1000 1100 100 400])
+
+(defn greatest-binary-search
+  [asks bid left right]
+  (if (>= left right)
+    (if (= right (dec count asks))
+      -1
+      (inc left))
+    (let [mid (int (/ (+ left right) 2))]
+      (cond 
+        (= bid (asks mid)) mid
+        (< bid (asks mid)) (recur asks bid left (dec mid))
+        :else (recur asks bid (inc mid) right)))))
+
+(defn match-bid-ask
+  [bids asks]
+  (let [sorted-bids (vec (sort  bids))
+        sorted-asks (vec (sort  asks))]
+    (second (reduce (fn [[unmatched-asks result] bid] 
+                      (let [index (greatest-binary-search unmatched-asks bid 0 (dec (count unmatched-asks)))]
+                        (if (< index 0)
+                          [unmatched-asks result]
+                          [(vec (concat (subvec unmatched-asks 0 index) (subvec unmatched-asks (inc index) (count unmatched-asks))))
+                           (cons result [bid (unmatched-asks index)])])))
+                    [sorted-asks []] sorted-bids))))
