@@ -68,9 +68,10 @@
             (empty? c) false
             (or (= \. (first pattern)) (= (first pattern) (first c)))
             (or (is-match (rest c) (rest (rest pattern))) (recur (rest c)))
-            :else (recur (rest c)))))))
+            :else (is-match c (rest (rest pattern))))))))
 
 #_ (is-match "aab" "a.*b")
+#_ (is-match "mississippi" "mis*is*p*.")
 
 
 

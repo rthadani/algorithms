@@ -147,7 +147,23 @@
 
 #_(def x (build-trie ["homework" "home" "water"]))
 
+(defn in-trie-with-wildcard? 
+    [trie pattern]
+    (if (and (empty? pattern) (:val trie))
+      true
+      (let [f (first pattern)]
+        (if (not= f \.)
+          (and (contains? trie f) (in-trie-with-wildcard? (get trie f) (rest pattern)))
+          (some #(in-trie-with-wildcard? (get trie %) (rest pattern)) (keys trie))))))
 
+(defn is-match?
+  [pattern dictionary]
+  (-> (build-trie dictionary)
+      (in-trie-with-wildcard? pattern)
+      boolean))
+
+  #_(is-match? "b.x" ["bat" "bet" "home" "hit"])
+  
 ;;any-tree
 (defn create-tree
   ([nodes]
