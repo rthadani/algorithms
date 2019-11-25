@@ -37,5 +37,5 @@
    :scientist
    :programmer])
 
-#_(knn-classifier [1.74 67 22] train train-labels cosine-distance 3)
+#_(knn-classifier [1.74 67 22] train train-labels cosine-distance 2)
 

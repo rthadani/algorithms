@@ -1,4 +1,5 @@
-(ns algorithms.leetcode.medium)
+(ns algorithms.leetcode.medium
+  (:require [clojure.data.priority-map :refer [priority-map-by]]))
 
 ;;2 Add two number ins a link list reversed
 ;;You are given two linked lists representing two non-negative numbers.
@@ -249,5 +250,89 @@
 
 
 
+;;150 RPN
+(defn do-op
+  [op t1 t2]
+  (println op t1 t2)
+  (case op
+    "+" (+ (Integer/parseInt t1) (Integer/parseInt t2))
+    "-" (- (Integer/parseInt t1) (Integer/parseInt t2))
+    "*" (* (Integer/parseInt t1) (Integer/parseInt t2))
+    "/" (int (/ (Integer/parseInt t2) (Integer/parseInt t1)))))
+
+(defn is-op?
+  [op]
+  (#{"+" "-" "*" "/"} op))
+
+(defn rpn
+  ([tokens]
+   (rpn tokens []))
+  ([tokens stack]
+   (println "stack" stack)
+   (if (empty? tokens)
+     (Integer/parseInt (peek stack))
+     (if (is-op? (first tokens))
+       (let [t1 (peek stack)
+             stack (pop stack)
+             t2 (peek stack)
+             stack (pop stack)]
+         (println stack)
+         (recur (rest tokens)
+                (->> (do-op (first tokens) t1 t2)
+                     (str)
+                     (conj stack))))
+       (recur (rest tokens) (conj stack (first tokens)))))))
 
 
+#_(rpn ["2", "1", "+", "3", "*"])
+#_(rpn ["10", "6", "9", "3", "+", "-11", "*", "/", "*", "17", "+", "5", "+"])
+
+
+;;787 Cheapest flights within k stops
+(defn make-graph
+  [flights]
+  (reduce
+   (fn [graph [s d p]]
+     (if (not (graph s)) (assoc graph s [[d p]])
+         (assoc graph s (conj (graph s) [d p]))))
+   {}
+   flights))
+
+(defn get-price
+  [graph s d]
+  (->> (graph s) (filter (fn [[dest _]] (= dest d))) first second))
+
+(defn get-neighbors 
+  [graph source]
+  (map first (graph source)))
+
+(defn set-cheapest-price
+  [graph prices src dest]
+  (assoc prices dest (min (prices dest) (+ (prices src) (get-price graph src dest)))))
+
+(defn set-cheapest-prices
+ [graph src cheapest-prices]
+ (reduce (fn [acc d] (set-cheapest-price graph acc src d)) 
+         cheapest-prices 
+         (get-neighbors graph src)))
+
+;;Uses djikstra and level ordered depth search
+(defn cheapest-flight 
+  [flights src dst k]
+  (let [graph (make-graph flights)]
+    (loop [queue (into clojure.lang.PersistentQueue/EMPTY [src])
+           newset (into clojure.lang.PersistentQueue/EMPTY [])
+           depth 0
+           cheapest-prices (assoc (reduce (fn [acc k] (assoc (assoc acc k (Integer/MAX_VALUE)) (ffirst (graph k)) Integer/MAX_VALUE)) {} (keys graph)) src 0)]
+      (println cheapest-prices dst)
+      (cond
+        (and (empty? queue) (empty? newset)) (if (= Integer/MAX_VALUE (cheapest-prices dst)) -1 (cheapest-prices dst))
+        (< depth k) (if (empty? queue)
+                      (recur newset (into clojure.lang.PersistentQueue/EMPTY []) (inc depth) cheapest-prices)
+                      (recur (pop queue) (into newset (get-neighbors graph (peek queue))) depth (set-cheapest-prices graph (peek queue) cheapest-prices)))
+        :else (recur (pop queue) newset depth (set-cheapest-prices graph (peek queue) cheapest-prices))))))
+
+#_(cheapest-flight [[0,1,100],[1,2,100],[0,2,500]] 0 2 1)
+#_(cheapest-flight [[0,1,100],[1,2,100],[0,2,500]] 0 2 0)
+#_(cheapest-flight [[0,1,100],[1,2,100],[2,3,500]] 1 3 2)
+#_(cheapest-flight [[0,1,100],[1,2,100],[1,3,500]] 0 2 0)
