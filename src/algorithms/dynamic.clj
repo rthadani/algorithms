@@ -47,7 +47,7 @@
 ;; i, j are the current positions of the strings a, b
 ;;Opt(i, j) = len(i) if j = len(b)
 ;;            len(j) if i = len(a)
-;;            Opt(i - i, j- 1) if charAt(i) = charAt(j)
+;;            Opt(i - 1, j- 1) if charAt(i) = charAt(j)
 ;;            1 + min(Opt(i, j - 1), Opt (i - 1, j), Opt(i - 1, j - 1))
 (declare levenshtein)
 

@@ -75,5 +75,10 @@
 (def knapsack (memoize knapsack*))
 #_ (knapsack [5 3 4 2]  [60 50 70 30] 5)
 
-
+(defn decompose-words
+  [s dictionary i]
+  (cond 
+    (empty? s) true
+    (dictionary (str s)) true)
+    :else (for [j (range 0 i)]))
 
