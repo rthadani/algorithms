@@ -79,7 +79,7 @@
                  (filter-0-indegree new-in-degree)
                  (conj acc (peek q))))))))
 
-#_(topological-sort {:5 [:2 :0]
+#_ (topological-sort {:5 [:2 :0]
                      :2 [:3]
                      :4 [:0 :1]
                      :3 [:1]

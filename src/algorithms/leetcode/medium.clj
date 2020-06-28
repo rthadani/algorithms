@@ -67,8 +67,9 @@
     (let [[both pal1] (lps s (inc i) (dec j))
           [only-j pal2] (lps s (inc i) j)
           [only-i pal3] (lps s i (dec j))]
+      (println both pal1 only-j pal2 only-i pal3 (s i) (s j))
       (cond
-        (= (s i) (s j)) [(+ 2 both) (conj (vec (cons (s i) pal1)) (s j))]
+        (and (> both 0) (= (s i) (s j))) [(+ 2 both) (conj (vec (cons (s i) pal1)) (s j))]
         (> only-j only-i) [only-j pal2]
         :else [only-i pal3]))))
 (def lps (memoize lps*))
@@ -76,8 +77,10 @@
 (defn longest-palindromic-substring
   [string]
   (->> (lps (vec (seq string)) 0 (dec (count string)))
-       second
-       (apply str)))
+       #_second
+       #_(apply str)))
+
+#_ (longest-palindromic-substring "ababca")
 
 ;;11 container with most water
 

@@ -129,7 +129,7 @@
       (if (> wi w)
         (subset-sum (dec i) weights w)
         (let [[v-i  _ :as without-i] (subset-sum (dec i) weights w)
-              [v+i items+i as :as with-i] (subset-sum (dec i) weights (- w wi))]
+              [v+i items+i :as with-i] (subset-sum (dec i) weights (- w wi))]
           (if (> (+ v+i wi) v-i)
             [(+ v+i wi) (conj items+i i)]
             without-i))))))
@@ -139,7 +139,7 @@
 ;;for knapsack replace w with v the value of an item when comparing
 
 ;;RNA secondary structure
-;Opt(i,j) = max(Opt(i, j - 1), max(1 + Opt(i, t - 1)  + Opt(t + 1, j - 1))
+;Opt(i,j) = max(Opt(i, j - 1), max(1 + Opt(i, j-t-1)  + Opt(j + t - 1, j - 1))
 ; where t is atleast 4 units away from j
 (declare rna-struct)
 (defn rna-struct*

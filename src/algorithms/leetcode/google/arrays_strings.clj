@@ -1,5 +1,6 @@
 (ns algorithms.leetcode.google.arrays-strings
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [algorithms.heaps :as h]))
 
 ;;longest substring without repeats
 (defn has-dupes?
@@ -15,17 +16,19 @@
 
 (defn longest-substring-no-repeats-better
   ([s]
-   (longest-substring-no-repeats-better s #{} 0))
-  ([s current-set current-count]
+   (longest-substring-no-repeats-better s #{} 0 0 0))
+  ([s current-set  l r current-count]
    (cond
-     (empty? s) current-count
-     (current-set (first s)) (max current-count
-                                  (longest-substring-no-repeats-better (rest s) (disj current-set (first s)) (dec current-count)))
-     :else (longest-substring-no-repeats-better (rest s) (conj current-set (first s)) (inc current-count)))))
+     (or (>= l (count s)) (>= r (count s))) current-count
+     (current-set (nth s r)) (max current-count
+                                  (longest-substring-no-repeats-better s (disj current-set (nth s l)) (inc l) r (- r l)))
+     :else (longest-substring-no-repeats-better s (conj current-set (nth s r)) l (inc r) (- (inc r) l)))))
 
-#_(count (longest-substring-no-repeats "abcabcbb"))
-#_(longest-substring-no-repeats-better "abcabcbb")
-#_(longest-substring-no-repeats-better "bbbbb")
+#_ (count (longest-substring-no-repeats "abcabcbb"))
+#_ (longest-substring-no-repeats-better "abcabcbb")
+#_ (longest-substring-no-repeats-better "bbbbb")
+#_ (longest-substring-no-repeats-better "abcbdef")
+#_ (longest-substring-no-repeats-better "pwwkew")
 
 ;;container with most water
 (defn container-most-water
@@ -60,10 +63,17 @@
 ;;next-permutation
 (defn find-first-non-decreasing-element-idx
   [p]
-  (dec (first (reduce  (fn [[i d] c]
+  (dec (reduce (fn [r i] (println r i) (cond 
+                           (zero? i) 0
+                           (< (p i) (p (inc i))) (reduced r)
+                           :else (dec r))) 
+               (dec (count p)) 
+               (range (- (count p) 2) -1 -1)))
+  
+  #_(dec (first (reduce  (fn [[i d] c]
                          (if (<  c d)
-                           (reduced [(- (count p) i) d])
-                           [(inc i) c])) [0 (last p)] (reverse p)))))
+                           (reduced [i d])
+                           [(dec i) c])) [(dec (count p)) (last p)] (reverse p)))))
 
 (defn find-swap-index
   [p i]
@@ -83,10 +93,13 @@
 (defn next-permutation
   [p]
   (let [n (find-first-non-decreasing-element-idx p)
-        swapped (swap-idx p n (find-swap-index p n))]
+        _ (println (find-swap-index p n))
+        swapped (if (>= n 0) (swap-idx p n (find-swap-index p n)) p)]
+    (println n)
     (concat (subvec swapped 0 (inc n)) (reverse (subvec swapped (inc n))))))
 
-#_(next-permutation [1 5 8 4 7 6 5 3 1])
+#_ (next-permutation [1 5 8 4 7 6 5 3 1])
+#_ (next-permutation [1 2 3 4])
 
 (defn convert-to-digits
   [num]
@@ -108,8 +121,8 @@
          (apply +))))
 
 #_(convert-to-digits "123")
-#_(multiply-lower [100 20 3] 2)
-#_(multiply-strings "123" "21")
+#_ (multiply-lower [100 20 3] 2)
+#_ (multiply-strings "123" "21")
 
 ;;rotate image
 (defn transpose-matrix
@@ -252,7 +265,7 @@
 #_ (expressive-words "heeellooo" ["hello", "hi", "helo"])
 
 
-;;
+;;find-and-replace
 (defn can-replace-index?
   [s i m]
   (= m (subs s i (+ i (count m)))))
@@ -277,3 +290,151 @@
 
 #_ (find-and-replace "abcd" [0,2] ["a","cd"] ["eee","ffff"])
 
+;;maximize-distance-to-closest
+(defn filled-chair-indexes
+  [chairs]
+  (cons 0 (conj (vec (for [i (range 0 (count chairs))
+                           :when (= 1 (chairs i))]
+                       i)) (dec (count chairs)))))
+
+(defn maximize-distance
+  [chairs]
+  (->> chairs
+       filled-chair-indexes
+       (partition 2 1)
+       (map (fn [[f l]] (- l f)))
+       (apply max)
+       (* (/ 1 2))))
+
+#_ (maximize-distance [1 0 0 0 1 0 1])
+
+;;valid parenthesis
+(def open-close-map {\{ \}
+                     \( \)
+                     \[ \]})
+(defn valid-parenthesis
+  ([pars]
+   (valid-parenthesis pars []))
+  ([pars stack]
+   (let [close (into #{} (vals open-close-map))]
+     (cond 
+       (empty? pars) (empty? stack)
+       (contains? open-close-map (first pars)) (valid-parenthesis (rest pars) (cons(first pars) stack))
+       (contains? close (first pars)) (and (= (first pars) (open-close-map (first stack))) (valid-parenthesis (rest pars) (rest stack)))
+       :else false))))
+
+#_ (valid-parenthesis "()")
+#_ (valid-parenthesis "()[]{}")
+#_ (valid-parenthesis "(]")
+#_ (valid-parenthesis "{()}")
+;;merge k sorted lists
+(defn- add-to-result-from-heap
+  [heap result comparator]
+  [(h/delete-min-binary-heap heap comparator)
+   (conj result (first (h/find-min-binary-heap heap)))
+   (second (h/find-min-binary-heap heap))])
+
+(defn merge-sorted-arrays
+  ([arrays]
+   (letfn [(min-heap-comparator [x y] (< (first x) (first y)))]
+     (->
+      (map-indexed (fn [idx arr] (mapv (fn [a] [a idx]) arr)) arrays)
+      (merge-sorted-arrays min-heap-comparator))))
+  ([arrays min-heap-comparator]
+   (loop [heap (reduce (fn [heap array] (h/insert-binary-heap heap (first array) min-heap-comparator)) [] arrays)
+          arrays (mapv (fn [array] (into [] (rest array))) arrays)
+          result []]
+     (if (empty? heap)
+       result
+       (let [[heap-without-element result min-element-array-index] (add-to-result-from-heap heap result min-heap-comparator)
+             min-element-array (get arrays min-element-array-index)
+             new-element-array (into [] (rest min-element-array))
+             new-min-element (first min-element-array)
+             new-heap (if (empty? min-element-array) heap-without-element (h/insert-binary-heap heap-without-element new-min-element min-heap-comparator))
+             new-arrays (assoc arrays min-element-array-index new-element-array)]
+         (recur new-heap new-arrays result))))))
+
+#_(merge-sorted-arrays [[0 4 42] [1 2] [3  5 35]])
+
+
+;;trap rain water
+(defn trapping-rain-water
+  [heights]
+  (apply + 
+         (for [i (range 0 (count heights))]
+           (- (min (apply max (subvec heights 0 (inc i))) (apply max (subvec heights i (count heights)))) (heights i)))))
+
+#_ (trapping-rain-water [0,1,0,2,0,0,0,3,2,1,2,1])
+
+;;kth-largest
+(defn kth-largest
+  [a k]
+  (let [hp (reduce #(h/insert-binary-heap % %2 h/max-heap-lighter) [] a)]
+    (loop [hp hp
+           k k]
+      (if (> k 1)
+        (recur
+         (h/delete-min-binary-heap hp h/max-heap-lighter) (dec k))
+        (h/find-min-binary-heap hp)))))
+
+#_ (kth-largest [3,2,3,1,2,4,5,5,6]  4)
+
+;;meeting-rooms-2
+(defn meeting-rooms-2
+  [appointments]
+  (let [sorted (sort-by first appointments)]
+    (count (reduce (fn [heap [start end]]
+               (let [top (h/find-min-binary-heap heap)]
+                 (cond
+                   (or (nil? top) (> top start)) (h/insert-binary-heap heap end h/min-heap-lighter)
+                   (< top start) (h/insert-binary-heap (h/delete-min-binary-heap heap h/min-heap-lighter) end h/min-heap-lighter)))) 
+             [] sorted))))
+#_ (meeting-rooms-2 [[0, 30],[5, 10],[15, 20]])
+
+;;backspace-string-compare
+(defn make-backspace-string
+  [string]
+  (reduce (fn [r s]
+            (cond
+              (and (= \# s) (> (count r) 0)) (do (print "1") (subs r 0 (dec (count r))))
+              (= \# s) r
+              :else (str r s))) 
+          "" string))
+
+(defn backspace-string-compare
+  [s t]
+  (= (make-backspace-string s) (make-backspace-string t)))
+
+#_  (backspace-string-compare "ab#c" "ad#c")
+
+;; Min cost to hire workers
+(defn cost-points
+  [quality wage]
+  (mapv (fn [q w] (/ w q)) quality wage))
+
+(defn min-cost-to-hire-k
+  [quality wage k]
+  (let [cp (cost-points quality wage)]
+    (println cp)
+    (->> (for [i (range 0 (count quality))
+               :let [c (cp i)]]
+           (->> (map-indexed (fn [j q] (when (not= i j)
+                                         (if (> (* q c) (wage j))
+                                           (* q c)
+                                           (wage j)))) 
+                             quality)
+               (filter #(not (nil? %)))
+                sort
+                (cons (wage i))))
+          (map #(take k %))
+          (map #(apply + %))
+          (apply min))))
+
+#_ (min-cost-to-hire-k [10 20 5] [70 50 30] 2)
+
+;;k-closest-to-origin
+(defn k-closest-to-origin
+  [points k]
+  (->> (sort-by (fn [[x y]] (+ (* x x) (* y y))) points)
+     (take k)))
+#_ (k-closest-to-origin [[3,3],[5,-1],[-2,4]] 2)
