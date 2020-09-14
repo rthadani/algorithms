@@ -117,7 +117,8 @@
   ([t] (distinct (binary-tree-paths t "" [])))
   ([t s r]
    (cond 
-     (nil? t) (conj r (subs s 2))
+     (nil? t) [] 
+     (and (nil? (:r t)) (nil? (:l t)) ) (conj r (subs s 2))
      :else 
      (->> (binary-tree-paths (:l t) (str s "->" (:v t)) r)
           (binary-tree-paths (:r t) (str s "->" (:v t)))))))
