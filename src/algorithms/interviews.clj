@@ -113,3 +113,62 @@
     (->> (iterate next-business-day s)
          (take n)
          last)))
+
+;;in-memory file system
+(defrecord Entry [name is-file sub-entries contents])
+(def root (Entry. "" false {} ""))
+(defn add-entry
+  [path contents root]
+  (cond (empty? path) (if (empty? contents)
+                        root
+                        (Entry. (:name root) true {} (str (:contents root) contents)))
+        (empty? (first path)) (add-entry (rest path) contents root)
+        :else (let [next-part  (first path)
+                    next-entry (if (contains? (:sub-entries root) next-part)
+                                 ((:sub-entries root) next-part)
+                                 (Entry. next-part false {} ""))] 
+                (Entry. (:name root)
+                        (:is-file root)
+                        (assoc (:sub-entries root) next-part (add-entry (rest path) contents next-entry))
+                        (:contents root)))))
+(defn get-entry 
+  [path root]
+  (cond 
+    (empty? path) root
+    (empty? (first path)) (get-entry (rest path) root)
+    :else 
+    (when (contains? (:sub-entries root) (first path)) 
+      (get-entry (rest path) ((:sub-entries root) (first path)) ))))
+
+(defn list-entry 
+  [path root]
+  (let [entry (get-entry path root)]
+    (when entry
+      (if (:is-file entry) 
+        (:name entry)
+        (keys (:sub-entries entry))))))
+
+(defn add-dir 
+  [path root]
+  (add-entry (clojure.string/split path #"/") "" root))
+
+(defn add-file
+  [path contents root]
+  (add-entry (clojure.string/split path #"/") contents root))
+
+(defn ls
+  [path root]
+  (list-entry (clojure.string/split path #"/") root))
+
+
+
+#_ (->> (add-entry ["a"] "" root)
+        (add-entry ["a" "b"] "") 
+        (add-entry ["a" "c"] "hello") 
+        (add-entry ["a" "c"] " world"))
+
+#_ (->> (add-dir "/a/b" root)
+        (add-file "/a/b/c" "hello")
+        (add-dir "/a/b/d")
+        (add-file "/a/b/c" " world")
+        #_(ls "/a/b"))
