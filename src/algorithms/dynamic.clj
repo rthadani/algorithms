@@ -135,7 +135,7 @@
             without-i))))))
 
 (def subset-sum (memoize subset-sum*))
-#_(subset-sum 5 [3 34 4 12 5 2] 13)
+#_ (subset-sum 5 [3 34 4 12 5 2] 13)
 ;;for knapsack replace w with v the value of an item when comparing
 
 ;;RNA secondary structure

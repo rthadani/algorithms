@@ -40,6 +40,7 @@
   (reduce combine 0 (partition-all 2 1 (map numerals s))))
 
 #_ (roman-to-integer "MCMXCIV")
+#_ (map numerals "MCMXCIV")
 #_ (roman-to-integer "LVIII")
 
 ;;three sum

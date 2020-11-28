@@ -24,8 +24,8 @@
         :else
         (recur (swap result equal end) start equal (dec end))))))
 
-(flag-value {:R 0 :W 1 :B 2} :W)
-(dutch-national-flag [:R :W :B :R :W :B :R :W :B] 1 {:R 0 :W 1 :B 2})
+#_ (flag-value {:R 0 :W 1 :B 2} :W)
+#_ (dutch-national-flag [:R :W :B :R :W :B :R :W :B] 1 {:R 0 :W 1 :B 2})
 
 
 ;Say you have an array for which the ith element is the price of a given stock on day i.
@@ -41,8 +41,8 @@
    [Integer/MAX_VALUE 0]
    prices))
 
-(second (buy-sell-stock 7,1,5,3,6,4))
-(second (buy-sell-stock 6,4))
+#_ (second (buy-sell-stock 7,1,5,3,6,4))
+#_ (second (buy-sell-stock 6,4))
 
 (defn random-sampling
   ([k arr]
@@ -54,7 +54,7 @@
            rand-index (rand-int (count rest-arr))]
        (recur (inc start) k (-> (assoc arr start (rest-arr rand-index))
                                 (assoc rand-index (arr start))))))))
-(random-sampling 2 [1 2 3 4 5])
+#_ (random-sampling 2 [1 2 3 4 5])
 
 
 (defn spiral-ordering
@@ -73,7 +73,7 @@
     (for [i (range (dec (- (count mat) offset)) offset -1)]
       (get-in mat [i offset])))))
 
-(spiral-ordering [[1 2 3 4]
+#_ (spiral-ordering [[1 2 3 4]
                   [5 6 7 8]
                   [9 10 11 12]
                   [13 14 15 16]])
@@ -91,7 +91,7 @@
                    [[] true 0 1]
                    (reverse arr)))))
 
-(increment-arbitrary-precision [1 9 9])
+#_ (increment-arbitrary-precision [1 9 9])
 
 
 (defn sudoku-checker
@@ -128,7 +128,7 @@
    []
    arr))
 
-(delete-sorted-array-dupes [1 1 1 2 3 3 4])
+#_ (delete-sorted-array-dupes [1 1 1 2 3 3 4])
 
 (defn primes-to-n
   ([n] (take-while #(<= % n) (primes-to-n n (iterate inc 2))))
@@ -140,11 +140,11 @@
                        (filter
                         #(not= 0 (mod % (first sieve))) (rest sieve)))))))
 
-(primes-to-n 23)
+#_ (primes-to-n 23)
 (defn pascals-triangle
   [rows]
   (take rows (iterate #(mapv + (cons 0 %) (conj % 0)) [1])))
-(pascals-triangle 3)
+#_ (pascals-triangle 3)
 
 
 
