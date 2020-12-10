@@ -172,3 +172,13 @@
         (add-dir "/a/b/d")
         (add-file "/a/b/c" " world")
         #_(ls "/a/b"))
+
+
+(defn make-graph
+  [edges]
+  (reduce
+   (fn [g [s e]] (-> (update g s conj e) 
+                     (update e conj s) ))
+   {}
+   edges))
+#_ (make-graph [[:a :b] [:b :c]])
