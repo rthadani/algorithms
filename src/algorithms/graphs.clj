@@ -97,6 +97,41 @@
                           [:o :p 2] [:o :r 2]]
              :r :p)
 
+(defn get-path
+  [breadcrumbs target]
+  (if 
+    (or (empty? breadcrumbs) (nil? target)) []
+    (let [[s d] (first (filter #(= (second %) target) breadcrumbs))]
+      (if (nil? d)
+        []
+        (conj (get-path breadcrumbs s) d)))))
+
+(defn get-negative-cycles
+  [edges d]
+  (loop [e edges
+         negative-cycle-edges []]
+    (if (empty? e)
+      negative-cycle-edges
+      (let [[f t l] (first e)]
+        (if (and (not= (d f) Double/POSITIVE_INFINITY) 
+                 (< (+ l (d f)) (d t)))
+          (recur (rest e) (conj negative-cycle-edges (first e)))
+          (recur (rest e) negative-cycle-edges))))))
+
+(defn add-negative-cycle
+  [path edges negative-cycles]
+  (if (empty? negative-cycles)
+    path
+    ( )))
+  (->>
+   (loop [p (partition 2 1 path)
+          negative-cycle-used false
+          result []]
+     (let [[f t] (first p)]
+       (if (and (not negative-cycle-used) (contains? negative-cycles [f t]))
+         (concat (rest p) (result (negative-cycle-path (first p))))))
+   (partition 2 1 path)))
+
 (defn update-distances
   [edges d s]
   (reduce
@@ -123,7 +158,7 @@
 
 (defn has-neg-weight-cycle
   [edges d]
-  (not= (first (update-distances edges d)) d))
+  (not= (first (update-distances edges (first d) (second d))) (first d)))
 #_ (def edges [[0 1 8] [1 3 1] [2 3 7] [0 2 1] [2 1 4]])
 #_ (has-neg-weight-cycle edges (bellman-ford edges 0))
 
