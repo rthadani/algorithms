@@ -15,6 +15,13 @@
    :sketch (into {} (for [i (range 0 (int hash-fns))]
               [i (vec (repeat width 0))]))})
 
+
+(defn replicate-count-min-sketch
+  [{:keys [sketch width] :as count-min-sketch}]
+  (assoc count-min-sketch :sketch 
+         (into {} (for [i (range 0 (count sketch))]
+              [i (vec (repeat width 0))]))))
+
 (defn update-count-min-sketch 
   [{:keys [hash-fns sketch] :as container} v]
   (assoc container :sketch
@@ -25,6 +32,14 @@
           hash-fns)))
 
 
+(defn merge-count-min-sketch
+  [s1 s2]
+  (assert (and 
+           (= (:width s1) (:width s2))
+           (= (:hash-fns s1) (:hash-fns s2))))
+  (let [new-sketch (into {} (map (fn [[i j] [_ l]] [i (+ j l)]) (:sketch s1) (:sketch s2)))]
+    (assoc s1 :sketch new-sketch)))
+
 (defn frequency
   [{:keys [hash-fns sketch]} value]
   (let [indices (into {} (map (fn [[i f]]  [i (f value)]) hash-fns))]
@@ -32,7 +47,7 @@
          (apply min))))
 
 
-;;TODO range top k hitters, perceentile
+;;TODO range, perceentile
 (defn top-k-sketch
   [error-rate accuracy k]
   {:count-min-sketch  (count-min-sketch (Math/ceil (/ Math/E error-rate))
