@@ -1,5 +1,5 @@
 (ns algorithms.debug)
-
+#_(println "test")
 (defmacro verbose->>
   [x & forms]
   (loop [x x
@@ -11,20 +11,20 @@
                        (with-meta `(~(first form) ~@(next form) ~x) (meta form))
                        (list form x))]
         (recur
-          threaded
-          (next forms)
-          (conj intermediate `(do
-                                (println "x: ")
-                                (pp/pprint ~x)
-                                (println "\nthreaded: ")
-                                (pp/pprint '~threaded)
-                                (println "\n=> ")
-                                (pp/pprint ~threaded)
-                                (println "\n-------")))))
+         threaded
+         (next forms)
+         (conj intermediate `(do
+                               (println "x: ")
+                               (pp/pprint ~x)
+                               (println "\nthreaded: ")
+                               (pp/pprint '~threaded)
+                               (println "\n=> ")
+                               (pp/pprint ~threaded)
+                               (println "\n-------")))))
       (list 'do
-        `(doseq [i# ~intermediate]
-           i#)
-        x))))
+            `(doseq [i# ~intermediate]
+               i#)
+            x))))
 
 
 (defmacro verbose->
@@ -48,5 +48,5 @@
                                      (println "\n-------")))))
       (list 'do
             `(doseq [i# ~intermediate]
-               i#) 
-      x))))
+               i#)
+            x))))
